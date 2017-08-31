@@ -1,6 +1,6 @@
 import re
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from collections import deque
 from sys import stdout
 from typing import Dict
@@ -51,7 +51,7 @@ class Endpoint(metaclass=ABCMeta):
         x = str(url)
         pos = max(x.rfind('#'), x.rfind('/')) + 1
         ns = x[:pos]
-        return ns in self._namespaces and x[pos].isalpha()
+        return ns in self._namespaces and (x[pos].isalpha() or x[pos]=='_')
 
     def ns_part(self, url):
         x = str(url)
@@ -63,9 +63,9 @@ class Endpoint(metaclass=ABCMeta):
 
     def toPython(self,term):
         if isinstance(term, URIRef):
-            if self.prefixes !=None and "/" in term.toPython():
-                if self.ns_part(term)==self.base_uri:
-                    return self.local_part(term)
+            if self.prefixes !=None and ("/" in term.toPython() or str(term).startswith('urn:')):
+                if str(term).startswith(self.base_uri):
+                    return "<"+term[len(self.base_uri):]+">"
                 if self.in_namespace(term):
                     try:
                         return self.short_name(term)
@@ -104,9 +104,12 @@ class Endpoint(metaclass=ABCMeta):
                     value=_toRDF(value)
             # virtuoso-specific hack for bnodes
             if isinstance(value,BNode):
-                value=URIRef(value.toPython())
+                value=self.bnode_to_sparql(value)
             sparql=sparql.replace("?"+name,value.n3())
         return sparql
+
+    def bnode_to_sparql(self,bnode):
+        return bnode
 
     def _normalize_column_type(self,column):
         if not all(filter(lambda x:x==None or type(x)==str,column)):
@@ -147,8 +150,40 @@ class Endpoint(metaclass=ABCMeta):
         """,bindings=dict(s=node))
 
         types=self._set(survey)
-        if RDF.Seq in types:
-            return self._decollect_Seq(node)
+        if RDF.Bag in types:
+            return self._decollect_Bag(node)
+
+        return self._decollect_Seq(node)
+
+    def _decollect_Seq(self, node):
+        items=self.select_raw("""
+            SELECT ?index ?item {
+                ?s ?predicate ?item
+                FILTER(STRSTARTS(STR(?predicate),"http://www.w3.org/1999/02/22-rdf-syntax-ns#_"))
+                BIND(xsd:integer(SUBSTR(STR(?predicate),45)) AS ?index)
+            } ORDER BY ?index
+        """,bindings=dict(s=node))
+        output=[]
+        for x in items:
+            output.append(self.toPython(x["item"]))
+        return output
+
+
+    def _decollect_Bag(self, node):
+        items=self.select_raw("""
+            SELECT ?item (COUNT(*) AS ?count) {
+                ?s ?predicate ?item
+                FILTER(STRSTARTS(STR(?predicate),"http://www.w3.org/1999/02/22-rdf-syntax-ns#_"))
+                BIND(xsd:integer(SUBSTR(STR(?predicate),45)) AS ?index)
+            } GROUP BY ?item 
+        """,bindings=dict(s=node))
+        output=Counter()
+
+        for x in items:
+            output[self.toPython(x["item"])]=self.toPython(x["count"])
+
+        return output
+
 
     def _decollect_Seq(self, node):
         items=self.select_raw("""
@@ -177,6 +212,10 @@ class Endpoint(metaclass=ABCMeta):
     def _select(self, sparql,**kwargs) -> SPARQLResult:
         pass
 
+    @abstractmethod
+    def _update(self, sparql,**kwargs) -> None:
+        pass
+
     def select(self,sparql:str,**kwargs) -> pd.DataFrame:
         result = self.select_raw(sparql,**kwargs)
         return self._dataframe(result)
@@ -189,6 +228,10 @@ class Endpoint(metaclass=ABCMeta):
         result = self._select(sparql, **kwargs)
         return result
 
+    def update(self,sparql:str,**kwargs) -> pd.DataFrame:
+        self._process_namespaces(sparql)
+        sparql = self.substitute_arguments(sparql, kwargs, self.prefixes)
+        return self._update(sparql,**kwargs)
 
 class RemoteEndpoint(Endpoint):
     def __init__(self,url:str,prefixes:Graph=None,user=None,passwd=None,http_auth=None,default_graph=None,base_uri=None):
@@ -215,14 +258,17 @@ class RemoteEndpoint(Endpoint):
     def jsonToPython(self,jsdata):
         return self.toPython(self.jsonToNode(jsdata))
 
-    def update(self,sparql:str,**kwargs) -> pd.DataFrame:
+    def bnode_to_sparql(self,bnode):
+        return URIRef(bnode.toPython())
+
+
+
+    def _update(self, sparql,**kwargs):
         that = self._wrapper()
-        null = self._process_namespaces(sparql)
-        sparql = self.substitute_arguments(sparql, kwargs, self.prefixes)
         that.setQuery(sparql)
         that.setReturnFormat(JSON)
         that.setMethod("POST")
-        result=that.queryAndConvert()
+        result = that.queryAndConvert()
         return
 
     def _wrapper(self):
@@ -308,12 +354,18 @@ class RemoteEndpoint(Endpoint):
 
 class LocalEndpoint(Endpoint):
     def __init__(self,graph:Graph,prefixes:Graph=None,user=None,passwd=None,http_auth=None):
+        if not prefixes:
+            prefixes=graph
         super().__init__(prefixes)
         self.graph=graph
 
     def _select(self, sparql:str,**kwargs) -> dict:
         result=self.graph.query(sparql)
         return result
+
+    def _update(self, sparql:str,**kwargs) ->None :
+        self.graph.update(sparql)
+        return
 
 def _toRDF(x):
     lex,datatype=_castPythonToLiteral(x)
@@ -342,7 +394,19 @@ def show_image(filename):
         image = f.read()
         display_png(image, raw=True)
 
-def model(turtle):
+def inline(turtle):
     g=Graph()
     g.parse(data=turtle,format="ttl")
-    return g
+    return LocalEndpoint(g)
+
+def one(items):
+    l=list(items)
+    if len(l)>1:
+        raise ValueError("Result has more than one member",l)
+    if len(l)==0:
+        raise IndexError("Cannot get first member from empty container",l)
+    return l[0]
+
+def member(index):
+    return URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#_{:d}".format(index+1))
+
