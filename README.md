@@ -7,5 +7,5 @@ The following are reference documentation for tools you will use
 * [Pandas](http://pandas.pydata.org/pandas-docs/stable/)
 * [Jupyter](http://jupyter.org/index.html)
 * [rdflib](https://github.com/RDFLib/rdflib#readme)
-* [SPARQL](http://www.w3.org/TR/2013/REC-sparql11-query-20130321/)
+* [SPARQL](http://www.w3.org/TR/2013/REC-sparql11-query-20130321/#basicpatterns)
 
