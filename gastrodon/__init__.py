@@ -8,10 +8,13 @@ from typing import Dict
 import pandas as pd
 from IPython.display import display_png
 from SPARQLWrapper import SPARQLWrapper, JSON
+from pyparsing import ParseResults
 from rdflib import Graph, URIRef, Literal, BNode, RDF
 from rdflib.namespace import NamespaceManager
 from rdflib.plugins.serializers.turtle import TurtleSerializer
 from rdflib.plugins.sparql.processor import SPARQLResult
+from rdflib.plugins.sparql.parser import parseQuery,parseUpdate
+
 from rdflib.store import Store
 from rdflib.term import Identifier, _castPythonToLiteral, Variable
 
@@ -64,7 +67,7 @@ class Endpoint(metaclass=ABCMeta):
     def toPython(self,term):
         if isinstance(term, URIRef):
             if self.prefixes !=None and ("/" in term.toPython() or str(term).startswith('urn:')):
-                if str(term).startswith(self.base_uri):
+                if self.base_uri and str(term).startswith(self.base_uri):
                     return "<"+term[len(self.base_uri):]+">"
                 if self.in_namespace(term):
                     try:
@@ -78,17 +81,31 @@ class Endpoint(metaclass=ABCMeta):
         prefix, namespace, name = self.prefixes.compute_qname(term)
         return ":".join((prefix, name))
 
-    def _process_namespaces(self, sparql):
+    def _process_namespaces(self, sparql, parseFn):
         if self.prefixes != None:
-            sparql = self.prepend_namespaces(sparql)
+            sparql = self.prepend_namespaces(sparql, parseFn)
         return sparql
 
     def _candidate_prefixes(self, sparql:str):
         return {x.group(1) for x in self.qname_regex.finditer(sparql)}
 
-    def prepend_namespaces(self,sparql:str):
-        ns_section=""
+    def prepend_namespaces(self,sparql:str,parseFn):
+
+        # extract prefixes and base uri from the query so that we won't try to
+        # overwrite them
+
+        parsed = parseFn(sparql)
+        (query_base,query_ns)=_extract_decl(parsed,parseFn)
+
         candidates=self._candidate_prefixes(sparql)
+        for (q_prefix,q_uri) in query_ns.namespaces():
+            if q_prefix in candidates:
+                candidates.remove(q_prefix)
+
+        ns_section = ""
+        if self.base_uri and not query_base:
+            ns_section += "base <%s>\n" % (self.base_uri)
+
         for name,value in self.prefixes.namespaces():
             if name in candidates:
                 ns_section += "prefix %s: %s\n" % (name,value.n3())
@@ -221,7 +238,7 @@ class Endpoint(metaclass=ABCMeta):
         return self._dataframe(result)
 
     def select_raw(self,sparql:str,**kwargs):
-        sparql = self._process_namespaces(sparql)
+        sparql = self._process_namespaces(sparql,parseQuery)
         if "bindings" in kwargs:
             bindings = kwargs["bindings"]
             sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
@@ -229,7 +246,7 @@ class Endpoint(metaclass=ABCMeta):
         return result
 
     def update(self,sparql:str,**kwargs) -> pd.DataFrame:
-        self._process_namespaces(sparql)
+        self._process_namespaces(sparql,parseUpdate)
         sparql = self.substitute_arguments(sparql, kwargs, self.prefixes)
         return self._update(sparql,**kwargs)
 
@@ -409,4 +426,18 @@ def one(items):
 
 def member(index):
     return URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#_{:d}".format(index+1))
+
+def _extract_decl(parsed: ParseResults,parseFn):
+    ns=Graph()
+    base_iri=None
+    for decl in parsed[0] if parseFn==parseQuery else parsed["prologue"][0]:
+        if 'prefix' in decl:
+            ns.bind(decl["prefix"],decl["iri"],override=True)
+        elif 'iri' in decl:
+            base_iri=decl["iri"]
+    return (base_iri,ns)
+
+
+
+
 
