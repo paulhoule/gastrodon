@@ -2,8 +2,10 @@ import re
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, Counter
 from collections import deque
-from sys import stdout
-from typing import Dict
+from sys import stdout,_getframe
+from types import FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType
+from types import BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType
+from typing import Dict,GenericMeta
 
 import pandas as pd
 from IPython.display import display_png
@@ -18,6 +20,15 @@ from rdflib.plugins.sparql.parser import parseQuery,parseUpdate
 from rdflib.store import Store
 from rdflib.term import Identifier, _castPythonToLiteral, Variable
 
+#
+# types that could not reasonably be expected to be serialized automatically to RDF terms in a SPARQL query.
+#
+
+_cannot_substitute={
+    FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType,
+    BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType,
+    ABCMeta,GenericMeta,type
+}
 
 class QName:
     def __init__(self,name:str):
@@ -32,7 +43,6 @@ class QName:
             if prefix==head:
                 return ns+tail
         return URIRef(self.name)
-
 
 class Endpoint(metaclass=ABCMeta):
     qname_regex=re.compile("(?<![A-Za-z<])([A-Za-z_][A-Za-z_0-9.-]*):")
@@ -234,21 +244,36 @@ class Endpoint(metaclass=ABCMeta):
         pass
 
     def select(self,sparql:str,**kwargs) -> pd.DataFrame:
-        result = self.select_raw(sparql,**kwargs)
+        result = self.select_raw(sparql,_user_frame=2,**kwargs)
         return self._dataframe(result)
 
-    def select_raw(self,sparql:str,**kwargs):
+    def select_raw(self,sparql:str,_user_frame=1,**kwargs):
         sparql = self._process_namespaces(sparql,parseQuery)
         if "bindings" in kwargs:
             bindings = kwargs["bindings"]
-            sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
+        else:
+            bindings = self._filter_frame(_getframe(_user_frame))
+
+        sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
         result = self._select(sparql, **kwargs)
         return result
 
-    def update(self,sparql:str,**kwargs) -> pd.DataFrame:
+    def update(self,sparql:str,_user_frame=1,**kwargs) -> pd.DataFrame:
         self._process_namespaces(sparql,parseUpdate)
-        sparql = self.substitute_arguments(sparql, kwargs, self.prefixes)
+        if "bindings" in kwargs:
+            bindings = kwargs["bindings"]
+        else:
+            bindings=self._filter_frame(_getframe(_user_frame))
+        sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
         return self._update(sparql,**kwargs)
+
+    def _filter_frame(self,that:FrameType):
+        return {
+            "_"+k:v for (k,v)
+                in that.f_locals.items()
+                if type(v) not in _cannot_substitute
+                   and not k.startswith("_")
+        }
 
 class RemoteEndpoint(Endpoint):
     def __init__(self,url:str,prefixes:Graph=None,user=None,passwd=None,http_auth=None,default_graph=None,base_uri=None):
