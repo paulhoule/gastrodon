@@ -30,6 +30,21 @@ _cannot_substitute={
     ABCMeta,GenericMeta,type
 }
 
+class GastrodonURI(str):
+    """
+        This class is used to wrap a URI that is passed from Gastrodon to Pandas and back again.  It keeps track of
+        both a shortened URI (if a namespace is given) and the full URI,  so we can roundtrip this object out of the
+        table and back into a SPARQL query without a chance of a short name being mistaken for an ordinary string.
+    """
+    def __new__(cls,short,uri_ref):
+        return super().__new__(cls,short)
+
+    def __init__(self,short,uri_ref):
+        self.uri_ref=uri_ref
+
+    def to_uri_ref(self):
+        return self.uri_ref
+
 class QName:
     def __init__(self,name:str):
         self.name=name
@@ -78,12 +93,13 @@ class Endpoint(metaclass=ABCMeta):
         if isinstance(term, URIRef):
             if self.prefixes !=None and ("/" in term.toPython() or str(term).startswith('urn:')):
                 if self.base_uri and str(term).startswith(self.base_uri):
-                    return "<"+term[len(self.base_uri):]+">"
+                    return GastrodonURI("<" + term[len(self.base_uri):] + ">", term)
                 if self.in_namespace(term):
                     try:
-                        return self.short_name(term)
+                        return GastrodonURI(self.short_name(term), term)
                     except Exception:
                         pass
+            return term
 
         return term.toPython()
 
@@ -127,6 +143,8 @@ class Endpoint(metaclass=ABCMeta):
             if not isinstance(value,Identifier):
                 if isinstance(value,QName):
                     value=value.toURIRef(prefixes)
+                elif isinstance(value, GastrodonURI):
+                    value=value.to_uri_ref()
                 else:
                     value=_toRDF(value)
             # virtuoso-specific hack for bnodes
@@ -253,6 +271,7 @@ class Endpoint(metaclass=ABCMeta):
             bindings = kwargs["bindings"]
         else:
             bindings = self._filter_frame(_getframe(_user_frame))
+
 
         sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
         result = self._select(sparql, **kwargs)
