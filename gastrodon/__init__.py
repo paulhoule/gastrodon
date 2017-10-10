@@ -2,15 +2,16 @@ import re
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, Counter
 from collections import deque
+from functools import lru_cache
 from sys import stdout,_getframe
 from types import FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType
 from types import BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType
-from typing import Dict,GenericMeta
+from typing import Dict,GenericMeta,Match
 
 import pandas as pd
 from IPython.display import display_png
 from SPARQLWrapper import SPARQLWrapper, JSON
-from pyparsing import ParseResults
+from pyparsing import ParseResults, ParseException
 from rdflib import Graph, URIRef, Literal, BNode, RDF
 from rdflib.namespace import NamespaceManager
 from rdflib.plugins.serializers.turtle import TurtleSerializer
@@ -29,6 +30,12 @@ _cannot_substitute={
     BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType,
     ABCMeta,GenericMeta,type
 }
+
+_pncu_regex='_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF'
+_var_regex=re.compile('[?$]([%s0-9][%s0-9\u00B7\u0300-\u036F\u203F-\u2040]*)' % ((_pncu_regex,)*2))
+
+# % (
+#     PN_CHARS_U_re)
 
 class GastrodonURI(str):
     """
@@ -59,6 +66,20 @@ class QName:
                 return ns+tail
         return URIRef(self.name)
 
+_last_exception=[]
+
+class GastrodonException(Exception):
+    kwargs:Dict={}
+
+    def __init__(self,*args,**kwargs):
+        super().__init__(*args)
+        if "lines" not in kwargs:
+            kwargs["lines"]=args[0].split('\n')
+        self.kwargs=kwargs
+
+    def _render_traceback_(self):
+        return self.kwargs["lines"]
+
 class Endpoint(metaclass=ABCMeta):
     qname_regex=re.compile("(?<![A-Za-z<])([A-Za-z_][A-Za-z_0-9.-]*):")
 
@@ -79,7 +100,9 @@ class Endpoint(metaclass=ABCMeta):
         x = str(url)
         pos = max(x.rfind('#'), x.rfind('/')) + 1
         ns = x[:pos]
-        return ns in self._namespaces and (x[pos].isalpha() or x[pos]=='_')
+        return ns in self._namespaces \
+            and (x[pos].isalpha() or x[pos]=='_') \
+            and not (":" in x[pos:])
 
     def ns_part(self, url):
         x = str(url)
@@ -90,6 +113,9 @@ class Endpoint(metaclass=ABCMeta):
         return x[max(x.rfind('#'), x.rfind('/')) + 1:]
 
     def toPython(self,term):
+        if term==None:
+            return None
+
         if isinstance(term, URIRef):
             if self.prefixes !=None and ("/" in term.toPython() or str(term).startswith('urn:')):
                 if self.base_uri and str(term).startswith(self.base_uri):
@@ -139,19 +165,27 @@ class Endpoint(metaclass=ABCMeta):
         return ns_section+sparql
 
     def substitute_arguments(self,sparql:str,args:Dict,prefixes:NamespaceManager) -> str:
-        for name,value in args.items():
-            if not isinstance(value,Identifier):
-                if isinstance(value,QName):
-                    value=value.toURIRef(prefixes)
-                elif isinstance(value, GastrodonURI):
-                    value=value.to_uri_ref()
-                else:
-                    value=_toRDF(value)
-            # virtuoso-specific hack for bnodes
-            if isinstance(value,BNode):
-                value=self.bnode_to_sparql(value)
-            sparql=sparql.replace("?"+name,value.n3())
+        def substitute_one(m:Match):
+            name=m.group(1)
+            if name not in args:
+                return m.group()
+            return self.to_rdf(args[name],prefixes).n3()
+
+        sparql = _var_regex.sub(substitute_one,sparql)
         return sparql
+
+    def to_rdf(self, value, prefixes):
+        if not isinstance(value, Identifier):
+            if isinstance(value, QName):
+                value = value.toURIRef(prefixes)
+            elif isinstance(value, GastrodonURI):
+                value = value.to_uri_ref()
+            else:
+                value = _toRDF(value)
+        # virtuoso-specific hack for bnodes
+        if isinstance(value, BNode):
+            value = self.bnode_to_sparql(value)
+        return value
 
     def bnode_to_sparql(self,bnode):
         return bnode
@@ -178,8 +212,8 @@ class Endpoint(metaclass=ABCMeta):
         for name in columnNames:
             column[name] = []
         for bindings in result.bindings:
-            for variable in bindings:
-                column[str(variable)].append(self.toPython(bindings[variable]))
+            for variable in result.vars:
+                column[str(variable)].append(self.toPython(bindings.get(variable)))
 
         for key in column:
             column[key] = self._normalize_column_type(column[key])
@@ -263,10 +297,17 @@ class Endpoint(metaclass=ABCMeta):
 
     def select(self,sparql:str,**kwargs) -> pd.DataFrame:
         result = self.select_raw(sparql,_user_frame=2,**kwargs)
-        return self._dataframe(result)
+        frame=self._dataframe(result)
+        columnNames = {str(x) for x in result.vars}
+        parsed=_parseQuery(sparql)
+        group_variables=_extract_group_by(parsed)
+
+        if group_variables and all([x in columnNames for x in group_variables]):
+            frame.set_index(group_variables,inplace=True)
+        return frame
 
     def select_raw(self,sparql:str,_user_frame=1,**kwargs):
-        sparql = self._process_namespaces(sparql,parseQuery)
+        sparql = self._process_namespaces(sparql,_parseQuery)
         if "bindings" in kwargs:
             bindings = kwargs["bindings"]
         else:
@@ -274,11 +315,26 @@ class Endpoint(metaclass=ABCMeta):
 
 
         sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
-        result = self._select(sparql, **kwargs)
+        try:
+            result = self._select(sparql, **kwargs)
+        except ParseException as x:
+            lines=[
+                "*** ERROR ***",
+                "",
+                "Failure parsing SPARQL query after argument substitution.  This is almost certainly an error inside",
+                "Gastrodon.  Substituted query text follows:",
+                ""
+            ]
+            error_lines = sparql.split("\n")
+            error_lines.insert(x.lineno," "*(x.col-1)+"^")
+            error_lines.append("Error at line %d and column %d" % (x.lineno,x.col))
+            lines += error_lines
+            _last_exception=GastrodonException("Error parsing substituted SPARQL query",lines=lines,inner_exception=x)
+            raise _last_exception from None
         return result
 
     def update(self,sparql:str,_user_frame=1,**kwargs) -> pd.DataFrame:
-        self._process_namespaces(sparql,parseUpdate)
+        self._process_namespaces(sparql,_parseUpdate)
         if "bindings" in kwargs:
             bindings = kwargs["bindings"]
         else:
@@ -321,8 +377,6 @@ class RemoteEndpoint(Endpoint):
 
     def bnode_to_sparql(self,bnode):
         return URIRef(bnode.toPython())
-
-
 
     def _update(self, sparql,**kwargs):
         that = self._wrapper()
@@ -461,11 +515,16 @@ def inline(turtle):
     return LocalEndpoint(g)
 
 def one(items):
+    if isinstance(items,pd.DataFrame):
+        if items.shape!=(1,1):
+            raise ValueError("one(x) requires that DataFrame x have exactly one row and one column")
+        return items.iloc[0,0]
+
     l=list(items)
     if len(l)>1:
-        raise ValueError("Result has more than one member",l)
+        raise ValueError("Result has more than one member")
     if len(l)==0:
-        raise IndexError("Cannot get first member from empty container",l)
+        raise IndexError("Cannot get first member from empty container")
     return l[0]
 
 def member(index):
@@ -474,14 +533,28 @@ def member(index):
 def _extract_decl(parsed: ParseResults,parseFn):
     ns=Graph()
     base_iri=None
-    for decl in parsed[0] if parseFn==parseQuery else parsed["prologue"][0]:
+    for decl in parsed[0] if parseFn==_parseQuery else parsed["prologue"][0]:
         if 'prefix' in decl:
             ns.bind(decl["prefix"],decl["iri"],override=True)
         elif 'iri' in decl:
             base_iri=decl["iri"]
     return (base_iri,ns)
 
+@lru_cache()
+def _parseUpdate(sparql):
+    return parseUpdate(sparql)
 
+@lru_cache()
+def _parseQuery(sparql):
+    return parseQuery(sparql)
 
+def _extract_group_by(parsed):
+    main_part=parsed[1]
+    if 'groupby' not in main_part:
+        return []
 
+    if not all([type(x)==Variable for x in main_part['groupby']['condition']]):
+        return []
+
+    return [str(x) for x in main_part['groupby']['condition']]
 
