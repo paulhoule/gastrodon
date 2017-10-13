@@ -86,6 +86,10 @@ class GastrodonException(Exception):
     def _render_traceback_(self):
         return self.kwargs["lines"]
 
+    @staticmethod
+    def throw(*args,**kwargs):
+        raise GastrodonException(*args,**kwargs) from None
+
 class Endpoint(metaclass=ABCMeta):
     qname_regex=re.compile("(?<![A-Za-z<])([A-Za-z_][A-Za-z_0-9.-]*):")
 
@@ -315,34 +319,67 @@ class Endpoint(metaclass=ABCMeta):
         return frame
 
     def select_raw(self,sparql:str,_user_frame=1,**kwargs):
-        sparql = self._process_namespaces(sparql,_parseQuery)
+        try:
+            sparql = self._process_namespaces(sparql,_parseQuery)
+        except ParseException as x:
+            lines= self._error_header()
+            lines += [
+                "Failure parsing SPARQL query supplied by caller;  this is either a user error or an error in a",
+                "function that generated this query.  Query text follows:",
+                ""
+            ]
+            error_lines = self._mark_query(sparql, x)
+            lines += error_lines
+            GastrodonException.throw("Error parsing SPARQL query",lines=lines,inner_exception=x)
+
         if "bindings" in kwargs:
             bindings = kwargs["bindings"]
         else:
             bindings = self._filter_frame(_getframe(_user_frame))
 
-
         sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
         try:
+            if "_inject_post_substitute_fault" in kwargs:
+                sparql=kwargs["_inject_post_substitute_fault"]
             result = self._select(sparql, **kwargs)
         except ParseException as x:
-            lines=[
-                "*** ERROR ***",
-                "",
+            lines= self._error_header()
+            lines += [
                 "Failure parsing SPARQL query after argument substitution.  This is almost certainly an error inside",
                 "Gastrodon.  Substituted query text follows:",
                 ""
             ]
-            error_lines = sparql.split("\n")
-            error_lines.insert(x.lineno," "*(x.col-1)+"^")
-            error_lines.append("Error at line %d and column %d" % (x.lineno,x.col))
+            error_lines = self._mark_query(sparql, x)
             lines += error_lines
-            _last_exception=GastrodonException("Error parsing substituted SPARQL query",lines=lines,inner_exception=x)
-            raise _last_exception from None
+            GastrodonException.throw("Error parsing substituted SPARQL query",lines=lines,inner_exception=x)
         return result
 
+    def _mark_query(self, sparql, x):
+        error_lines = sparql.split("\n")
+        error_lines.insert(x.lineno, " " * (x.col - 1) + "^")
+        error_lines.append("Error at line %d and column %d" % (x.lineno, x.col))
+        return error_lines
+
+    def _error_header(self):
+        return [
+            "*** ERROR ***",
+            "",
+        ]
+
     def update(self,sparql:str,_user_frame=1,**kwargs) -> pd.DataFrame:
-        self._process_namespaces(sparql,_parseUpdate)
+        try:
+            sparql = self._process_namespaces(sparql, _parseUpdate)
+        except ParseException as x:
+            lines = self._error_header()
+            lines += [
+                "Failure parsing SPARQL update statement supplied by caller;  this is either a user error or ",
+                "an error in a function that generated this query.  Query text follows:",
+                ""
+            ]
+            error_lines = self._mark_query(sparql, x)
+            lines += error_lines
+            GastrodonException.throw("Error parsing SPARQL query", lines=lines, inner_exception=x)
+
         if "bindings" in kwargs:
             bindings = kwargs["bindings"]
         else:
