@@ -320,12 +320,12 @@ class Endpoint(metaclass=ABCMeta):
 
     def select_raw(self,sparql:str,_user_frame=1,**kwargs):
         try:
-            sparql = self._process_namespaces(sparql,_parseQuery)
+            sparql = self._process_namespaces(sparql, _parseQuery)
         except ParseException as x:
             lines= self._error_header()
             lines += [
-                "Failure parsing SPARQL query supplied by caller;  this is either a user error or an error in a",
-                "function that generated this query.  Query text follows:",
+                "Failure parsing SPARQL query supplied by caller;  this is either a user error",
+                "or an error in a function that generated this query.  Query text follows:",
                 ""
             ]
             error_lines = self._mark_query(sparql, x)
