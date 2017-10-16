@@ -6,6 +6,13 @@ Toolkit to display,  analyze,  and visualize data and documents based on RDF gra
 
 Example notebooks can be found in the [notebooks](notebooks) directory.
 
+# Error messages you can understand
+## Error messages before Gastrodon
+
+![Awful Stack Trace](art/awful-stack-trace.png)
+## Error messages with Gastrodon
+![Good Error Message](art/good-error-message.png)
+
 The following are reference documentation for tools you will use
 
 * [Pandas](http://pandas.pydata.org/pandas-docs/stable/)
