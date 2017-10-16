@@ -1,10 +1,12 @@
-
-
 # gastrodon
 
 Toolkit to display,  analyze,  and visualize data and documents based on RDF graphs and the SPARQL query language using Pandas,  Jupyter, and other Python ecosystem tools.
 
 ![Gastrodon Links SPARQL to Pandas](art/logo-hero.png)
+
+# Seamless Data Translation
+
+![Seamless Data Translation(art/seamless-motion.png)
 
 # Query Intelligence
 
