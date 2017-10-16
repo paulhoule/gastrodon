@@ -6,7 +6,7 @@ Toolkit to display,  analyze,  and visualize data and documents based on RDF gra
 
 # Seamless Data Translation
 
-![Seamless Data Translation(art/seamless-motion.png)
+![Seamless Data Translation](art/seamless-motion.png)
 
 # Query Intelligence
 
