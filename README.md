@@ -2,6 +2,8 @@
 
 Toolkit to display,  analyze,  and visualize data and documents based on RDF graphs and the SPARQL query language using Pandas,  Jupyter, and other Python ecosystem tools.
 
+![Gastrodon Links SPARQL to Pandas](art/logo-hero.png)
+
 Example notebooks can be found in the [notebooks](notebooks) directory.
 
 The following are reference documentation for tools you will use
