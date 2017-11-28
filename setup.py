@@ -16,14 +16,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='sample',
-
-    # Versions should comply with PEP440.  For a discussion on single-sourcing
-    # the version across setup.py and the project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.2.0',
-
-    description='A sample Python project',
+    name='gastrodon',
+    setup_requires=['setuptools_scm'],
+    use_scm_version=True,
+    description='oolkit to display,  analyze,  and visualize data and documents based on RDF graphs and the SPARQL query language using Pandas,  Jupyter, and other Python ecosystem tools.',
     long_description=long_description,
 
     # The project's main homepage.
