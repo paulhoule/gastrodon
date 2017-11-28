@@ -7,6 +7,8 @@ from sys import stdout,_getframe
 from types import FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType
 from types import BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType
 from typing import Dict,GenericMeta,Match
+from urllib.error import HTTPError
+from urllib.parse import urlparse
 
 import pandas as pd
 from IPython.display import display_png
@@ -304,11 +306,15 @@ class Endpoint(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def _construct(self, sparql,**kwargs) -> Graph:
+        pass
+
+    @abstractmethod
     def _update(self, sparql,**kwargs) -> None:
         pass
 
     def select(self,sparql:str,**kwargs) -> pd.DataFrame:
-        result = self.select_raw(sparql,_user_frame=2,**kwargs)
+        result = self.select_raw(sparql,_user_frame=3,**kwargs)
         frame=self._dataframe(result)
         columnNames = {str(x) for x in result.vars}
         parsed=_parseQuery(sparql)
@@ -318,7 +324,13 @@ class Endpoint(metaclass=ABCMeta):
             frame.set_index(group_variables,inplace=True)
         return frame
 
-    def select_raw(self,sparql:str,_user_frame=1,**kwargs):
+    def select_raw(self,sparql:str,_user_frame=2,**kwargs):
+        return self._exec_raw(sparql,self._select,_user_frame,**kwargs)
+
+    def construct(self,sparql:str,_user_frame=2,**kwargs):
+        return self._exec_raw(sparql,self._construct,_user_frame,**kwargs)
+
+    def _exec_raw(self,sparql:str,operation,_user_frame=1,**kwargs):
         try:
             sparql = self._process_namespaces(sparql, _parseQuery)
         except ParseException as x:
@@ -341,7 +353,7 @@ class Endpoint(metaclass=ABCMeta):
         try:
             if "_inject_post_substitute_fault" in kwargs:
                 sparql=kwargs["_inject_post_substitute_fault"]
-            result = self._select(sparql, **kwargs)
+            result = operation(sparql, **kwargs)
         except ParseException as x:
             lines= self._error_header()
             lines += [
@@ -352,6 +364,18 @@ class Endpoint(metaclass=ABCMeta):
             error_lines = self._mark_query(sparql, x)
             lines += error_lines
             GastrodonException.throw("Error parsing substituted SPARQL query",lines=lines,inner_exception=x)
+        except HTTPError as x:
+            lines= self._error_header()
+            url_parts = urlparse(x.geturl())
+            lines += [
+                "HTTP Error doing Remote SPARQL query to endpoint at",
+                self.url,
+                ""
+            ]
+            lines.append(str(x))
+            GastrodonException.throw("HTTP Error doing Remote SPARQL query",lines=lines,inner_exception=x)
+            pass
+
         return result
 
     def _mark_query(self, sparql, x):
@@ -491,7 +515,7 @@ class RemoteEndpoint(Endpoint):
 
             items = self._select(query,bindings={"that":q.popleft()})
 
-    def _select(self, sparql:str,**kwargs) -> dict:
+    def _select(self, sparql:str,**kwargs) -> SPARQLResult:
         that = self._wrapper()
         that.setQuery(sparql)
         that.setReturnFormat(JSON)
@@ -512,6 +536,18 @@ class RemoteEndpoint(Endpoint):
         res["bindings"]=bindings
         return SPARQLResult(res)
 
+    def _construct(self, sparql:str,**kwargs) -> Graph:
+        result=self._select(sparql,**kwargs)
+        S=Variable("s")
+        P=Variable("p")
+        O=Variable("o")
+        neo=Graph()
+        for fact in result.bindings:
+            neo.add((fact[S],fact[P],fact[O]))
+
+        return neo
+
+
 class LocalEndpoint(Endpoint):
     def __init__(self,graph:Graph,prefixes:Graph=None,user=None,passwd=None,http_auth=None):
         if not prefixes:
@@ -519,9 +555,11 @@ class LocalEndpoint(Endpoint):
         super().__init__(prefixes)
         self.graph=graph
 
-    def _select(self, sparql:str,**kwargs) -> dict:
-        result=self.graph.query(sparql)
-        return result
+    def _select(self, sparql:str,**kwargs) -> SPARQLResult:
+        return self.graph.query(sparql)
+
+    def _construct(self, sparql:str,**kwargs) -> Graph:
+        return self.graph.query(sparql)
 
     def _update(self, sparql:str,**kwargs) ->None :
         self.graph.update(sparql)
