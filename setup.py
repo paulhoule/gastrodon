@@ -36,7 +36,7 @@ setup(
         'Intended Audience :: Financial and Insurance Industry',
         'Intended Audience :: Healthcare Industry',
         'Intended Audience :: Information Technology',
-        'Topic :: Database :: Front-End',
+        'Topic :: Database :: Front-Ends',
         'Topic :: Documentation :: Sphinx',
         'Topic :: Multimedia :: Graphics',
         'Topic :: Scientific/Engineering :: Information Analysis',
