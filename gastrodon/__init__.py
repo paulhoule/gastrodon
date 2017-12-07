@@ -1,3 +1,7 @@
+'''
+Gastrodon module header
+'''
+
 import re
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, Counter
@@ -51,20 +55,38 @@ class GastrodonURI(str):
         both a shortened URI (if a namespace is given) and the full URI,  so we can roundtrip this object out of the
         table and back into a SPARQL query without a chance of a short name being mistaken for an ordinary string.
     """
+
     def __new__(cls,short,uri_ref):
         return super().__new__(cls,short)
 
     def __init__(self,short,uri_ref):
         self.uri_ref=uri_ref
 
-    def to_uri_ref(self):
+    def to_uri_ref(self) -> URIRef:
+        """
+        :return: an RDFLib :class:`rdflib.URIRef`
+        """
         return self.uri_ref
 
 class QName:
+    """
+        This class represents a qualified name.  It is intended for the case where the user wants to tag
+        input data as a qualified name which will be resolved against a prefix-namespace mapping.  This is used
+        for inputting data from Python into Gastrodon,  whereas :class:`GastrodonURI` is used in the process of
+        getting data out of Gastrodon into Python and Pandas.
+
+        :param name: qualified name of the form 'prefix:localname',  such as 'rdf:type'
+    """
     def __init__(self,name:str):
         self.name=name
 
     def toURIRef(self,manager:NamespaceManager) -> URIRef:
+        """
+        Convert to URI Reference
+
+        :param manager: :class:`rdflib.namespace.NamespaceManager` used to resolve namespace
+        :return: A :class:`rdflib.URIRef`
+        """
         if ":" not in self.name:
             return None
 
@@ -77,6 +99,13 @@ class QName:
 _last_exception=[]
 
 class GastrodonException(Exception):
+    """
+    Gastroon-specific exception.  The primary features of this is that it defines the method
+    :meth:`_render_traceback_` which controls the way the exception is drawn in IPython.
+
+    :param args: positional arguments for :class:`Exception`
+    :param kwargs: keyword arguments for :class:`Exception`
+    """
     kwargs:Dict={}
 
     def __init__(self,*args,**kwargs):
@@ -90,9 +119,24 @@ class GastrodonException(Exception):
 
     @staticmethod
     def throw(*args,**kwargs):
+        """
+        Throws a new :class:`GastrodonException` with the following positional and keyword arguments while
+        suppressing the context of the :class:`Exception` to enable short error messages in Jupyter
+
+        :param args: positional arguments for Exception
+        :param kwargs: keyword arguments for Exception
+        :return: does not return
+        """
         raise GastrodonException(*args,**kwargs) from None
 
 class Endpoint(metaclass=ABCMeta):
+    """
+        An Endpoint is something which can answer SPARQL queries.  Current implementations include
+        a :class:`RemoteEndpoint` via the SPARQL protocol or a :class:`LocalEndpoint` provided by rdflib.
+
+        :param prefixes: Graph object with attached namespace mappings to be applied to the new :class:`Endpoint`
+        :param base_uri: base URI to control the base namespace of the :class:`Endpoint` as we see it.
+    """
     qname_regex=re.compile("(?<![A-Za-z<])([A-Za-z_][A-Za-z_0-9.-]*):")
 
     def __init__(self,prefixes:Graph=None,base_uri=None):
@@ -102,6 +146,9 @@ class Endpoint(metaclass=ABCMeta):
             self._namespaces=set(map(lambda y: y if y[-1] in {"#", "/"} else y + "/", [str(x[1]) for x in prefixes.namespaces()]))
 
     def namespaces(self):
+        """
+        :return: :class:`pandas.DataFrame` describing the prefix to namespace mapping used for this endpoint
+        """
         prefix = [x[0] for x in self.prefixes.namespaces()]
         namespace = [x[1] for x in self.prefixes.namespaces()]
         frame = pd.DataFrame(namespace, columns=["namespace"], index=prefix)
@@ -109,6 +156,14 @@ class Endpoint(metaclass=ABCMeta):
         return frame.sort_index()
 
     def in_namespace(self, url):
+        """
+        Many :class:`rdflib.URIRef` s can be resolve to a namespace and written as a short name (QName),  except when special
+        characters such as parenthesis and colon are in the localpart of the domain.  In that case,  the :class:`URIRef`
+        should be rendered as <http://example.com/>.
+
+        :param url: a URIRef or a str for a URL
+        :return: true if the URIRef can be safely resolved to a namespace in short form.
+        """
         x = str(url)
         pos = max(x.rfind('#'), x.rfind('/')) + 1
         prefix = x[:pos]
@@ -119,14 +174,30 @@ class Endpoint(metaclass=ABCMeta):
         return prefix in self._namespaces
 
     def ns_part(self, url):
+        """
+
+        :param url: URIRef or string URL
+        :return: namespace part of URL as string
+        """
         x = str(url)
         return x[:max(x.rfind('#'), x.rfind('/')) + 1]
 
     def local_part(self, url):
+        """
+
+        :param url: URIRef or string URL
+        :return: localname part of URL as string
+        """
         x = str(url)
         return x[max(x.rfind('#'), x.rfind('/')) + 1:]
 
-    def toPython(self,term):
+    def to_python(self, term):
+        """
+        This function has a camelCase as opposed to underscore_separate name to harmonize with the
+
+        :param term: an RDFLib Node object
+        :return: a Plain Ordinary Python Object except for URI References which are returned as GastrodonURI
+        """
         if term==None:
             return None
 
@@ -144,18 +215,22 @@ class Endpoint(metaclass=ABCMeta):
         return term.toPython()
 
     def short_name(self,term):
+        """
+        :param term: URIRef which can be expressed with a QName
+        :return: the QName,  as a string
+        """
         prefix, namespace, name = self.prefixes.compute_qname(term)
         return ":".join((prefix, name))
 
     def _process_namespaces(self, sparql, parseFn):
         if self.prefixes != None:
-            sparql = self.prepend_namespaces(sparql, parseFn)
+            sparql = self._prepend_namespaces(sparql, parseFn)
         return sparql
 
     def _candidate_prefixes(self, sparql:str):
         return {x.group(1) for x in self.qname_regex.finditer(sparql)}
 
-    def prepend_namespaces(self,sparql:str,parseFn):
+    def _prepend_namespaces(self, sparql:str, parseFn):
 
         # extract prefixes and base uri from the query so that we won't try to
         # overwrite them
@@ -178,17 +253,17 @@ class Endpoint(metaclass=ABCMeta):
 
         return ns_section+sparql
 
-    def substitute_arguments(self,sparql:str,args:Dict,prefixes:NamespaceManager) -> str:
+    def _substitute_arguments(self, sparql:str, args:Dict, prefixes:NamespaceManager) -> str:
         def substitute_one(m:Match):
             name=m.group(1)
             if name not in args:
                 return m.group()
-            return self.to_rdf(args[name],prefixes).n3()
+            return self._to_rdf(args[name], prefixes).n3()
 
         sparql = _var_regex.sub(substitute_one,sparql)
         return sparql
 
-    def to_rdf(self, value, prefixes):
+    def _to_rdf(self, value, prefixes):
         if not isinstance(value, Identifier):
             if isinstance(value, QName):
                 value = value.toURIRef(prefixes)
@@ -198,10 +273,10 @@ class Endpoint(metaclass=ABCMeta):
                 value = _toRDF(value)
         # virtuoso-specific hack for bnodes
         if isinstance(value, BNode):
-            value = self.bnode_to_sparql(value)
+            value = self._bnode_to_sparql(value)
         return value
 
-    def bnode_to_sparql(self,bnode):
+    def _bnode_to_sparql(self, bnode):
         return bnode
 
     def _normalize_column_type(self,column):
@@ -219,7 +294,6 @@ class Endpoint(metaclass=ABCMeta):
 
         return column
 
-
     def _dataframe(self, result:SPARQLResult)->pd.DataFrame:
         columnNames = [str(x) for x in result.vars]
         column = OrderedDict()
@@ -227,7 +301,7 @@ class Endpoint(metaclass=ABCMeta):
             column[name] = []
         for bindings in result.bindings:
             for variable in result.vars:
-                column[str(variable)].append(self.toPython(bindings.get(variable)))
+                column[str(variable)].append(self.to_python(bindings.get(variable)))
 
         for key in column:
             column[key] = self._normalize_column_type(column[key])
@@ -235,6 +309,11 @@ class Endpoint(metaclass=ABCMeta):
         return pd.DataFrame(column)
 
     def decollect(self,node):
+        '''
+
+        :param node: a URIRef pointing to an rdf:Seq, rdf:Bag, or rdf:Alt
+        :return: a Python List, Counter, or Set of POPOs
+        '''
         survey=self.select_raw("""
             SELECT ?type {
                 VALUES (?type) { (rdf:Seq) (rdf:Bag) (rdf:Alt)}
@@ -258,7 +337,7 @@ class Endpoint(metaclass=ABCMeta):
         """,bindings=dict(s=node))
         output=[]
         for x in items:
-            output.append(self.toPython(x["item"]))
+            output.append(self.to_python(x["item"]))
         return output
 
 
@@ -273,7 +352,7 @@ class Endpoint(metaclass=ABCMeta):
         output=Counter()
 
         for x in items:
-            output[self.toPython(x["item"])]=self.toPython(x["count"])
+            output[self.to_python(x["item"])]=self.to_python(x["count"])
 
         return output
 
@@ -288,7 +367,7 @@ class Endpoint(metaclass=ABCMeta):
         """,bindings=dict(s=node))
         output=[]
         for x in items:
-            output.append(self.toPython(x["item"]))
+            output.append(self.to_python(x["item"]))
         return output
 
     def _set(self,result):
@@ -314,6 +393,21 @@ class Endpoint(metaclass=ABCMeta):
         pass
 
     def select(self,sparql:str,**kwargs) -> pd.DataFrame:
+        """
+        Perform a SPARQL SELECT query against the endpoint.  To make interactive
+        queries easy in the Jupyter environment,  any variable with a name beginning with
+        an underscore (eg. ?_var or @_var)
+        in the SPARQL query will be replaced with an RDF serialized version of the
+        variable (eg. var) in the python stack frame of the caller.
+
+        If you call this in a Jupyter notebook,  it sees all variables that are accessible
+        from the cells in the notebook.  If you call it inside a function definition,  it
+        sees variables local to that definition.
+
+        :param sparql: SPARQL SELECT query
+        :param kwargs: any keyword arguments are implementation-dependent
+        :return: SELECT result as a Pandas DataFrame
+        """
         result = self.select_raw(sparql,_user_frame=3,**kwargs)
         frame=self._dataframe(result)
         columnNames = {str(x) for x in result.vars}
@@ -324,10 +418,27 @@ class Endpoint(metaclass=ABCMeta):
             frame.set_index(group_variables,inplace=True)
         return frame
 
-    def select_raw(self,sparql:str,_user_frame=2,**kwargs):
+    def select_raw(self,sparql:str,_user_frame=2,**kwargs) -> SPARQLResult:
+        """
+        Perform a SPARQL SELECT query as would the select method,  but do not
+        convert result to a DataFrame,  instead return the original
+        SPARQLResult
+
+        :param sparql: SPARQL SELECT query
+        :param kwargs: any keyword arguments are implementation-dependent
+        :return: result as a SPARQLResult
+        """
         return self._exec_raw(sparql,self._select,_user_frame,**kwargs)
 
     def construct(self,sparql:str,_user_frame=2,**kwargs):
+        """
+        Perform a SPARQL CONSTRUCT query,  making the same substitutions as
+        the select method.  Returns a Graph
+
+        :param sparql: SPARQL SELECT query
+        :param kwargs: any keyword arguments are implementation-dependent
+        :return: result as a Graph
+        """
         return self._exec_raw(sparql,self._construct,_user_frame,**kwargs)
 
     def _exec_raw(self,sparql:str,operation,_user_frame=1,**kwargs):
@@ -349,7 +460,7 @@ class Endpoint(metaclass=ABCMeta):
         else:
             bindings = self._filter_frame(_getframe(_user_frame))
 
-        sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
+        sparql = self._substitute_arguments(sparql, bindings, self.prefixes)
         try:
             if "_inject_post_substitute_fault" in kwargs:
                 sparql=kwargs["_inject_post_substitute_fault"]
@@ -390,7 +501,15 @@ class Endpoint(metaclass=ABCMeta):
             "",
         ]
 
-    def update(self,sparql:str,_user_frame=1,**kwargs) -> pd.DataFrame:
+    def update(self,sparql:str,_user_frame=1,**kwargs) -> None:
+        """
+        Performs a SPARQL update statement with the same substitutions as the select method
+
+        :param sparql: SPARQL update query,  as a str
+        :param _user_frame: Number of stack frames to look back to find variables;  defaults to 1,  which gets variables from the caller, 2 gets them from the caller of the caller and so forth
+        :param kwargs: dependent on implementation
+        :return: nothing
+        """
         try:
             sparql = self._process_namespaces(sparql, _parseUpdate)
         except ParseException as x:
@@ -408,7 +527,7 @@ class Endpoint(metaclass=ABCMeta):
             bindings = kwargs["bindings"]
         else:
             bindings=self._filter_frame(_getframe(_user_frame))
-        sparql = self.substitute_arguments(sparql, bindings, self.prefixes)
+        sparql = self._substitute_arguments(sparql, bindings, self.prefixes)
         return self._update(sparql,**kwargs)
 
     def _filter_frame(self,that:FrameType):
@@ -420,6 +539,15 @@ class Endpoint(metaclass=ABCMeta):
         }
 
 class RemoteEndpoint(Endpoint):
+    """
+        Represents a SPARQL endpoint available under the SPARQL Protocol.
+
+        :param url: String URL for the SPARQL endpoint
+        :param prefixes: Graph containing prefix declarations for this endpoint
+        :param http_auth: http authentication method (eg. "BASIC", "DIGEST")
+        :param default_graph: str URL for default graph
+        :param base_uri: str for base URI for purposes of name resolution
+    """
     def __init__(self,url:str,prefixes:Graph=None,user=None,passwd=None,http_auth=None,default_graph=None,base_uri=None):
         super().__init__(prefixes,base_uri)
         self.url=url
@@ -428,7 +556,7 @@ class RemoteEndpoint(Endpoint):
         self.http_auth=http_auth
         self.default_graph=default_graph
 
-    def jsonToNode(self,jsdata):
+    def _jsonToNode(self, jsdata):
         type = jsdata["type"]
         value = jsdata["value"]
         if type == "uri":
@@ -441,11 +569,11 @@ class RemoteEndpoint(Endpoint):
             return BNode(value)
         return None
 
-    def jsonToPython(self,jsdata):
-        return self.toPython(self.jsonToNode(jsdata))
+    def _jsonToPython(self, jsdata):
+        return self.to_python(self._jsonToNode(jsdata))
 
-    def bnode_to_sparql(self,bnode):
-        return URIRef(bnode.toPython())
+    def _bnode_to_sparql(self, bnode):
+        return URIRef(bnode.to_python())
 
     def _update(self, sparql,**kwargs):
         that = self._wrapper()
@@ -466,9 +594,16 @@ class RemoteEndpoint(Endpoint):
         return sparql_wrapper
 
     def peel(self,node):
+        """
+        Copies part of a graph starting at node,  copying all facts linked at that
+        node and continuing this transversal for each blank node that we find.
+
+        :param node: URIRef starting point
+        :return: Graph object containing copied graph
+        """
         output = self._peel(node)
         nodes=all_uri(output)
-        used_ns = {URIRef(nspart(x)) for x in nodes if x.startswith('http')}
+        used_ns = {URIRef(self.ns_part(x)) for x in nodes if x.startswith('http')}
         ns_decl = [ns for ns in self.prefixes.namespaces() if ns[1] in used_ns]
         for x in ns_decl:
             output.namespace_manager.bind(*x)
@@ -487,9 +622,9 @@ class RemoteEndpoint(Endpoint):
         urins = set()
         while True:
             for x in items["results"]["bindings"]:
-                s = self.jsonToNode(x["s"])
-                p = self.jsonToNode(x["p"])
-                o = self.jsonToNode(x["o"])
+                s = self._jsonToNode(x["s"])
+                p = self._jsonToNode(x["p"])
+                o = self._jsonToNode(x["o"])
                 if isinstance(s, URIRef):
                     urins.add(self.ns_part(s))
                 if isinstance(p, URIRef):
@@ -529,7 +664,7 @@ class RemoteEndpoint(Endpoint):
             rdf_row={}
             for variable in res["vars_"]:
                 if str(variable) in json_row:
-                    rdf_row[variable]=self.jsonToNode(json_row[str(variable)])
+                    rdf_row[variable]=self._jsonToNode(json_row[str(variable)])
                 else:
                     rdf_row[variable]=None
             bindings.append(rdf_row)
@@ -549,7 +684,19 @@ class RemoteEndpoint(Endpoint):
 
 
 class LocalEndpoint(Endpoint):
-    def __init__(self,graph:Graph,prefixes:Graph=None,user=None,passwd=None,http_auth=None):
+    '''
+        LocalEndpoint for doing queries against a local RDFLib graph
+
+        :param graph: Graph object that will be encapsulated
+        :param prefixes: Graph defining prefixes for this Endpoint,  will be the same as the input graph by default
+        :param base_uri: base_uri for resolving URLs
+    '''
+
+    def __init__(self,graph:Graph,prefixes:Graph=None):
+        """
+
+
+        """
         if not prefixes:
             prefixes=graph
         super().__init__(prefixes)
@@ -570,10 +717,23 @@ def _toRDF(x):
     return Literal(lex,datatype=datatype)
 
 def ttl(g:Store):
+    '''
+    Write out Graph (or other Store) in Turtle format to stdout.
+
+    :param g: input Graph
+    :return: nothing
+    '''
     s = TurtleSerializer(g)
     s.serialize(stdout,spacious=True)
 
 def all_uri(g:Graph):
+    '''
+    Returns the set of all URIRef objects inside Graph g appearing in the
+    subject. predicate, or object position in any triple.
+
+    :param g:  input Graph
+    :return: a set of URIRef objects for all URIRefs that appear in this graph
+    '''
     uris = set()
     for fact in g.triples((None, None, None)):
         for node in fact:
@@ -581,23 +741,43 @@ def all_uri(g:Graph):
                 uris.add(node)
     return uris
 
-def nspart(uri):
-    s=str(uri)
-    x=max(uri.rfind('#'),uri.rfind('/'))
-    return s[:x+1]
-
-
 def show_image(filename):
+    '''
+    Embed a PNG image with a filename relative to the current working directory into an
+    IPython/Jupyter notebook.
+
+    :param filename:
+    :return: nothing
+    '''
     with open(filename, "rb") as f:
         image = f.read()
         display_png(image, raw=True)
 
 def inline(turtle):
+    '''
+    Convert turtle-format RDF into a Graph
+
+    :param turtle: str in Turtle Format
+    :return: Graph with corresponding triples
+    '''
     g=Graph()
     g.parse(data=turtle,format="ttl")
     return LocalEndpoint(g)
 
 def one(items):
+    '''
+    In cases where a composite object has only a single element,  returns the element.
+
+    Element types currently supported are:
+
+    DataFrame
+        returns single element of a single row
+    List (or object castable to list)
+        returns only element of list
+
+    :param items: a composite object
+    :return: only member of composite object,  otherwise throw exception
+    '''
     if isinstance(items,pd.DataFrame):
         if items.shape!=(1,1):
             raise ValueError("one(x) requires that DataFrame x have exactly one row and one column")
@@ -611,6 +791,13 @@ def one(items):
     return l[0]
 
 def member(index):
+    '''
+    Return URIRef that (as ?predicate) states that ?object is the index(th) member of
+    ?subject.
+
+    :param index: non-negative integer index:
+    :return: URIRef rdf:_N for N=index+1
+    '''
     return URIRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#_{:d}".format(index+1))
 
 def _extract_decl(parsed: ParseResults,parseFn):
