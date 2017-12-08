@@ -1,0 +1,792 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API Reference &mdash; gastrodon 0.9.2.dev2+g33f29b2.d20171205 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="gastrodon 0.9.2.dev2+g33f29b2.d20171205 documentation" href="index.html"/>
+        <link rel="prev" title="Welcome to gastrodon’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> gastrodon
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-gastrodon">Endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#endpoint-implementations">Endpoint Implementations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supporting-classes-and-functions">Supporting Classes and Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#objects-created-only-by-gastrodon">Objects Created Only By Gastrodon</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gastrodon</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<p>This reference is organized to put the most important information first,  both overall and within each section.  You
+will mainly be working with implementations of the <cite>Endpoint</cite> object such as <cite>LocalEndpoint</cite> and <cite>RemoteEndpoint</cite></p>
+<div class="section" id="module-gastrodon">
+<span id="endpoints"></span><h2>Endpoints<a class="headerlink" href="#module-gastrodon" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="gastrodon.Endpoint">
+<em class="property">class </em><code class="descclassname">gastrodon.</code><code class="descname">Endpoint</code><span class="sig-paren">(</span><em>prefixes: rdflib.graph.Graph = None</em>, <em>base_uri=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>An Endpoint is something which can answer SPARQL queries.    <cite>Endpoint</cite>
+is an abstract base class and cannot be instantiated on its own.
+Current implementations include
+a <a class="reference internal" href="#gastrodon.RemoteEndpoint" title="gastrodon.RemoteEndpoint"><code class="xref py py-class docutils literal"><span class="pre">RemoteEndpoint</span></code></a> via the SPARQL protocol or a <a class="reference internal" href="#gastrodon.LocalEndpoint" title="gastrodon.LocalEndpoint"><code class="xref py py-class docutils literal"><span class="pre">LocalEndpoint</span></code></a> provided by rdflib.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>prefixes</strong> – Graph object with attached namespace mappings to be applied to the new <a class="reference internal" href="#gastrodon.Endpoint" title="gastrodon.Endpoint"><code class="xref py py-class docutils literal"><span class="pre">Endpoint</span></code></a></li>
+<li><strong>base_uri</strong> – base URI to control the base namespace of the <a class="reference internal" href="#gastrodon.Endpoint" title="gastrodon.Endpoint"><code class="xref py py-class docutils literal"><span class="pre">Endpoint</span></code></a> as we see it.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Core Methods</strong></p>
+<p>The <cite>select</cite>, <cite>construct</cite>, and <cite>update</cite> methods are the ones that you will use most often.  All of these do
+SPARQL queries or SPARQL updates on the RDF Graph fronted by this Endpoint.   If the endpoint is large or
+remote,  these functions could consume an unlimited time.</p>
+<dl class="method">
+<dt id="gastrodon.Endpoint.select">
+<code class="descname">select</code><span class="sig-paren">(</span><em>sparql: str</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="reference internal" href="_modules/gastrodon.html#Endpoint.select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.select" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a SPARQL SELECT query against the endpoint.  To make interactive
+queries easy in the Jupyter environment,  any variable with a name beginning with
+an underscore (eg. ?_var or &#64;_var)
+in the SPARQL query will be replaced with an RDF serialized version of the
+variable (eg. var) in the python stack frame of the caller.</p>
+<p>If you call this in a Jupyter notebook,  it sees all variables that are accessible
+from the cells in the notebook.  If you call it inside a function definition,  it
+sees variables local to that definition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sparql</strong> – SPARQL SELECT query</li>
+<li><strong>kwargs</strong> – any keyword arguments are implementation-dependent</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">SELECT result as a Pandas DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.construct">
+<code class="descname">construct</code><span class="sig-paren">(</span><em>sparql: str</em>, <em>_user_frame=2</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.construct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.construct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a SPARQL CONSTRUCT query,  making the same substitutions as
+the select method.  Returns a Graph</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sparql</strong> – SPARQL SELECT query</li>
+<li><strong>kwargs</strong> – any keyword arguments are implementation-dependent</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">result as a Graph</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>sparql: str</em>, <em>_user_frame=1</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/gastrodon.html#Endpoint.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a SPARQL update statement with the same substitutions as the select method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sparql</strong> – SPARQL update query,  as a str</li>
+<li><strong>_user_frame</strong> – Number of stack frames to look back to find variables;  defaults to 1,  which gets variables from the caller, 2 gets them from the caller of the caller and so forth</li>
+<li><strong>kwargs</strong> – dependent on implementation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p><strong>Graph Conversion Methods</strong></p>
+<p>Methods in this category convert between complex RDF structures inside the endpoint (eg. RDF Collections, a
+document record containing blank nodes) to Python data structures outside the endpoint (such Lists,  Sets,
+Bags, Counters, Trees, and even rdflib Graphs)</p>
+<dl class="method">
+<dt id="gastrodon.Endpoint.decollect">
+<code class="descname">decollect</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.decollect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.decollect" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> – a URIRef pointing to an rdf:Seq, rdf:Bag, or rdf:Alt</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a Python List, Counter, or Set of POPOs</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p><strong>Local Methods</strong></p>
+<p>These methods run quickly because they do not depend on the fronted RDF Graph; these are appropriate to use by callers such as <cite>apply</cite>
+methods and variants used in Pandas and similar software.</p>
+<dl class="method">
+<dt id="gastrodon.Endpoint.to_python">
+<code class="descname">to_python</code><span class="sig-paren">(</span><em>term</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.to_python"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.to_python" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a simple rdflib <cite>term</cite> into a idiomatic Python object.</p>
+<p>A simple rdflib term is entirely self-contained;  either a literal value or a signifier (a Resource) floating
+in space,  without consideration of other facts in the graph.</p>
+<p>For RDF literals and blank nodes,  behavior is exactly the same as the <cite>toPython</cite> method,  which this encloses.
+URIReferences are wrapped in <cite>GastrodonURI</cite> objects which look like short names (QNames) inside Jupyter and Pandas,
+but remember the full URI if they are later used with Gastrodon.</p>
+<p>This is a method of an <cite>Endpoint</cite> as opposed to a static method or method of a <cite>term</cite> wrapper because the
+exact resolution to a QName is relative to the namespaces defined for that <cite>Endpoint</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>term</strong> – an RDFLib Node object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a Plain Ordinary Python Object except for URI References which are returned as GastrodonURI</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.namespaces">
+<code class="descname">namespaces</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.namespaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.namespaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display prefix to namespace mapping.</p>
+<p>Produces a Pandas <cite>DataFrame</cite> that looks something like this</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="85%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">prefix</th>
+<th class="head">namespace</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>bibo</td>
+<td><code class="docutils literal"><span class="pre">http://purl.org/ontology/bibo/</span></code></td>
+</tr>
+<tr class="row-odd"><td>cc</td>
+<td><code class="docutils literal"><span class="pre">http://creativecommons.org/ns#</span></code></td>
+</tr>
+<tr class="row-even"><td>dbo</td>
+<td><code class="docutils literal"><span class="pre">http://dbpedia.org/ontology/</span></code></td>
+</tr>
+<tr class="row-odd"><td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+<p>where <cite>prefix</cite> is the index of the dataframe so you can look up a namespace like</p>
+<p><code class="docutils literal"><span class="pre">endpoint.namespaces().at['bibo','namespace']</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">pandas.DataFrame</span></code> describing the prefix to namespace mapping used for this endpoint</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.ns_part">
+<code class="descname">ns_part</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.ns_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.ns_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a URI like</p>
+<p><code class="docutils literal"><span class="pre">http://purl.org/ontology/bibo/AcademicArticle</span></code></p>
+<p>return the namespace part of the URI,  which would be</p>
+<p><code class="docutils literal"><span class="pre">http://purl.org/ontology/bibo/</span></code></p>
+<p>This is based on the syntax of the URI,  not the declared prefixes associated
+with this URI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> – URIRef or string URL</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">namespace part of URL as string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.local_part">
+<code class="descname">local_part</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.local_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.local_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a URI like</p>
+<p><code class="docutils literal"><span class="pre">http://purl.org/ontology/bibo/AcademicArticle</span></code></p>
+<p>return the localname part of the URI,  which would be</p>
+<p><code class="docutils literal"><span class="pre">AcademicArticle</span></code></p>
+<p>This is based on the syntax of the URI,  not the declared prefixes associated
+with this URI.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> – URIRef or string URL</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">localname part of URL as string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.short_name">
+<code class="descname">short_name</code><span class="sig-paren">(</span><em>term</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.short_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.short_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assuming we’ve made the following namespace declaration on this endpoint,</p>
+<p><code class="docutils literal"><span class="pre">&#64;prefix</span> <span class="pre">bibo:</span> <span class="pre">&lt;http://purl.org/ontology/bibo/&gt;</span></code></p>
+<p>and given a URI like</p>
+<p><code class="docutils literal"><span class="pre">http://purl.org/ontology/bibo/AcademicArticle</span></code></p>
+<p>this returns</p>
+<p><code class="docutils literal"><span class="pre">bibo:AcademicArticle</span></code></p>
+<p>which can be used as a QName relative to the Endpoint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>term</strong> – URIRef which can be expressed with a QName</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the QName,  as a string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="gastrodon.Endpoint.is_ok_qname">
+<code class="descname">is_ok_qname</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#Endpoint.is_ok_qname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.Endpoint.is_ok_qname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Many <code class="xref py py-class docutils literal"><span class="pre">URIRef</span></code>s can be resolved to a namespace and written as a short name (QName),  except when special
+characters such as parenthesis and colon are in the localpart of the domain.  In that case,  the <code class="xref py py-class docutils literal"><span class="pre">URIRef</span></code>
+should be rendered in RDF as an absolute URI (ex. <code class="docutils literal"><span class="pre">&lt;http://example.com/&gt;</span></code>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> – a URIRef or a str for a URL</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">true if the URIRef can be safely resolved to a namespace in short form.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="endpoint-implementations">
+<h2>Endpoint Implementations<a class="headerlink" href="#endpoint-implementations" title="Permalink to this headline">¶</a></h2>
+<p>If you wish to use an <cite>Endpoint</cite> you must instantiate one of the following implementations.</p>
+<dl class="class">
+<dt id="gastrodon.LocalEndpoint">
+<em class="property">class </em><code class="descclassname">gastrodon.</code><code class="descname">LocalEndpoint</code><span class="sig-paren">(</span><em>graph: rdflib.graph.Graph</em>, <em>prefixes: rdflib.graph.Graph = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#LocalEndpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.LocalEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>LocalEndpoint for doing queries against a local RDFLib graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>graph</strong> – Graph object that will be encapsulated</li>
+<li><strong>prefixes</strong> – Graph defining prefixes for this Endpoint,  will be the same as the input graph by default</li>
+<li><strong>base_uri</strong> – base_uri for resolving URLs</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="gastrodon.RemoteEndpoint">
+<em class="property">class </em><code class="descclassname">gastrodon.</code><code class="descname">RemoteEndpoint</code><span class="sig-paren">(</span><em>url: str</em>, <em>prefixes: rdflib.graph.Graph = None</em>, <em>user=None</em>, <em>passwd=None</em>, <em>http_auth=None</em>, <em>default_graph=None</em>, <em>base_uri=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#RemoteEndpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.RemoteEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a SPARQL endpoint available under the SPARQL Protocol.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> – String URL for the SPARQL endpoint</li>
+<li><strong>prefixes</strong> – Graph containing prefix declarations for this endpoint</li>
+<li><strong>http_auth</strong> – http authentication method (eg. “BASIC”, “DIGEST”)</li>
+<li><strong>default_graph</strong> – str URL for default graph</li>
+<li><strong>base_uri</strong> – str for base URI for purposes of name resolution</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="gastrodon.RemoteEndpoint.peel">
+<code class="descname">peel</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#RemoteEndpoint.peel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.RemoteEndpoint.peel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies part of a graph starting at node,  copying all facts linked at that
+node and continuing this transversal for each blank node that we find.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> – URIRef starting point</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Graph object containing copied graph</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="supporting-classes-and-functions">
+<h2>Supporting Classes and Functions<a class="headerlink" href="#supporting-classes-and-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="gastrodon.QName">
+<em class="property">class </em><code class="descclassname">gastrodon.</code><code class="descname">QName</code><span class="sig-paren">(</span><em>name: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#QName"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.QName" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class represents a qualified name.</p>
+<p>This class makes it easy to write qualified names,  without ambiguity,  in Python variables that
+later get substituted into SPARQL variables.  If</p>
+<p><code class="docutils literal"><span class="pre">&#64;prefix</span> <span class="pre">bibo:</span> <span class="pre">&lt;http://purl.org/ontology/bibo/&gt;</span></code></p>
+<p>is declared for an Endpoint,  and one writes in Python</p>
+<p><code class="docutils literal"><span class="pre">objectType=QName(&quot;bibo:AcademicPaper&quot;)</span></code></p>
+<p>then the SPARQL variable <code class="docutils literal"><span class="pre">?_objectType</span></code> will be replaced with a URI Referemce</p>
+<p><code class="docutils literal"><span class="pre">&lt;http://purl.org/ontology/bibo/AcademicPaper&gt;</span></code></p>
+<p>for queries inside the scope in which <cite>_objectType</cite> is local.  Note that if you simply wrote</p>
+<p><code class="docutils literal"><span class="pre">objectType=&quot;bibo:AcademicPaper&quot;</span></code></p>
+<p>the value substituted in SPARQL would be just the string</p>
+<p><code class="docutils literal"><span class="pre">&quot;bibo:AcademicPaper&quot;</span></code></p>
+<p>If one wants to write a URI Reference as a full URI,  simply use the <cite>URIRef</cite> class from rdflib,  ex.</p>
+<p><code class="docutils literal"><span class="pre">objectType=URIRef(&quot;http://purl.org/ontology/bibo/AcademicPaper&quot;)</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – qualified name of the form ‘prefix:localname’,  such as ‘rdf:type’</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="gastrodon.QName.toURIRef">
+<code class="descname">toURIRef</code><span class="sig-paren">(</span><em>manager: rdflib.namespace.NamespaceManager</em><span class="sig-paren">)</span> &#x2192; rdflib.term.URIRef<a class="reference internal" href="_modules/gastrodon.html#QName.toURIRef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.QName.toURIRef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert to URI Reference</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>manager</strong> – <code class="xref py py-class docutils literal"><span class="pre">rdflib.namespace.NamespaceManager</span></code> used to resolve namespace</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <code class="xref py py-class docutils literal"><span class="pre">rdflib.URIRef</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gastrodon.inline">
+<code class="descclassname">gastrodon.</code><code class="descname">inline</code><span class="sig-paren">(</span><em>turtle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#inline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.inline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert turtle-format RDF into a Graph</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>turtle</strong> – str in Turtle Format</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Graph with corresponding triples</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gastrodon.ttl">
+<code class="descclassname">gastrodon.</code><code class="descname">ttl</code><span class="sig-paren">(</span><em>g: rdflib.store.Store</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#ttl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.ttl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write out Graph (or other Store) in Turtle format to stdout.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>g</strong> – input Graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gastrodon.one">
+<code class="descclassname">gastrodon.</code><code class="descname">one</code><span class="sig-paren">(</span><em>items</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#one"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.one" title="Permalink to this definition">¶</a></dt>
+<dd><p>In cases where a composite object has only a single element,  returns the element.</p>
+<p>Element types currently supported are:</p>
+<dl class="docutils">
+<dt>DataFrame</dt>
+<dd>returns single element of a single row</dd>
+<dt>List (or object castable to list)</dt>
+<dd>returns only element of list</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>items</strong> – a composite object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">only member of composite object,  otherwise throw exception</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gastrodon.member">
+<code class="descclassname">gastrodon.</code><code class="descname">member</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#member"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return URIRef that (as ?predicate) states that ?object is the index(th) member of
+?subject.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> – non-negative integer index:</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">URIRef rdf:_N for N=index+1</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gastrodon.all_uri">
+<code class="descclassname">gastrodon.</code><code class="descname">all_uri</code><span class="sig-paren">(</span><em>g: rdflib.graph.Graph</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#all_uri"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.all_uri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the set of all URIRef objects inside Graph g appearing in the
+subject. predicate, or object position in any triple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>g</strong> – input Graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a set of URIRef objects for all URIRefs that appear in this graph</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gastrodon.show_image">
+<code class="descclassname">gastrodon.</code><code class="descname">show_image</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#show_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.show_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Embed a PNG image with a filename relative to the current working directory into an
+IPython/Jupyter notebook.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="objects-created-only-by-gastrodon">
+<h2>Objects Created Only By Gastrodon<a class="headerlink" href="#objects-created-only-by-gastrodon" title="Permalink to this headline">¶</a></h2>
+<p>You probably could (and should) get by without knowing about these two objects.  Both of these are created by
+Gastrodon to play particular roles in the IPython and Pandas environment.</p>
+<dl class="class">
+<dt id="gastrodon.GastrodonURI">
+<em class="property">class </em><code class="descclassname">gastrodon.</code><code class="descname">GastrodonURI</code><span class="sig-paren">(</span><em>short</em>, <em>uri_ref</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#GastrodonURI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.GastrodonURI" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is used to wrap a URI that is passed from Gastrodon to Pandas and back again.</p>
+<p><cite>GastrodonURI</cite> subclasses <cite>str</cite></p>
+<p>It keeps track of
+both a shortened URI (if a namespace is given) and the full URI,  so we can roundtrip this object out of the
+table and back into a SPARQL query without a chance of a short name being mistaken for an ordinary string.</p>
+<dl class="method">
+<dt id="gastrodon.GastrodonURI.to_uri_ref">
+<code class="descname">to_uri_ref</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; rdflib.term.URIRef<a class="reference internal" href="_modules/gastrodon.html#GastrodonURI.to_uri_ref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.GastrodonURI.to_uri_ref" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an RDFLib <code class="xref py py-class docutils literal"><span class="pre">rdflib.URIRef</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gastrodon.GastrodonException">
+<em class="property">class </em><code class="descclassname">gastrodon.</code><code class="descname">GastrodonException</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#GastrodonException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.GastrodonException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gastrodon-specific exception.  The primary features of this is that it defines the method
+<cite>_render_traceback_</cite> which controls the way the exception is drawn in IPython.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args</strong> – positional arguments for <cite>Exception</cite></li>
+<li><strong>kwargs</strong> – keyword arguments for <cite>Exception</cite></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="staticmethod">
+<dt id="gastrodon.GastrodonException.throw">
+<em class="property">static </em><code class="descname">throw</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gastrodon.html#GastrodonException.throw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gastrodon.GastrodonException.throw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Throws a new <a class="reference internal" href="#gastrodon.GastrodonException" title="gastrodon.GastrodonException"><code class="xref py py-class docutils literal"><span class="pre">GastrodonException</span></code></a> with the following positional and keyword arguments while
+suppressing the context of the <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code> to enable short error messages in Jupyter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – positional arguments for Exception</li>
+<li><strong>kwargs</strong> – keyword arguments for Exception</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">does not return</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to gastrodon’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Paul A. Houle.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.9.2.dev2+g33f29b2.d20171205',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
