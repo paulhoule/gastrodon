@@ -51,7 +51,11 @@ _valid_tail_regex=re.compile("[%s0-9]([%s.]*[%s])?" % (_pncu_regex,_pnc_regex,_p
 
 class GastrodonURI(str):
     """
-        This class is used to wrap a URI that is passed from Gastrodon to Pandas and back again.  It keeps track of
+        This class is used to wrap a URI that is passed from Gastrodon to Pandas and back again.
+
+        `GastrodonURI` subclasses `str`
+
+        It keeps track of
         both a shortened URI (if a namespace is given) and the full URI,  so we can roundtrip this object out of the
         table and back into a SPARQL query without a chance of a short name being mistaken for an ordinary string.
     """
@@ -70,10 +74,33 @@ class GastrodonURI(str):
 
 class QName:
     """
-        This class represents a qualified name.  It is intended for the case where the user wants to tag
-        input data as a qualified name which will be resolved against a prefix-namespace mapping.  This is used
-        for inputting data from Python into Gastrodon,  whereas :class:`GastrodonURI` is used in the process of
-        getting data out of Gastrodon into Python and Pandas.
+        This class represents a qualified name.
+
+        This class makes it easy to write qualified names,  without ambiguity,  in Python variables that
+        later get substituted into SPARQL variables.  If
+
+        ``@prefix bibo: <http://purl.org/ontology/bibo/>``
+
+        is declared for an Endpoint,  and one writes in Python
+
+        ``objectType=QName("bibo:AcademicPaper")``
+
+        then the SPARQL variable ``?_objectType`` will be replaced with a URI Referemce
+
+        ``<http://purl.org/ontology/bibo/AcademicPaper>``
+
+        for queries inside the scope in which `_objectType` is local.  Note that if you simply wrote
+
+        ``objectType="bibo:AcademicPaper"``
+
+        the value substituted in SPARQL would be just the string
+
+        ``"bibo:AcademicPaper"``
+
+        If one wants to write a URI Reference as a full URI,  simply use the `URIRef` class from rdflib,  ex.
+
+        ``objectType=URIRef("http://purl.org/ontology/bibo/AcademicPaper")``
+
 
         :param name: qualified name of the form 'prefix:localname',  such as 'rdf:type'
     """
@@ -100,11 +127,11 @@ _last_exception=[]
 
 class GastrodonException(Exception):
     """
-    Gastroon-specific exception.  The primary features of this is that it defines the method
-    :meth:`_render_traceback_` which controls the way the exception is drawn in IPython.
+        Gastrodon-specific exception.  The primary features of this is that it defines the method
+        `_render_traceback_` which controls the way the exception is drawn in IPython.
 
-    :param args: positional arguments for :class:`Exception`
-    :param kwargs: keyword arguments for :class:`Exception`
+        :param args: positional arguments for `Exception`
+        :param kwargs: keyword arguments for `Exception`
     """
     kwargs:Dict={}
 
@@ -131,7 +158,9 @@ class GastrodonException(Exception):
 
 class Endpoint(metaclass=ABCMeta):
     """
-        An Endpoint is something which can answer SPARQL queries.  Current implementations include
+        An Endpoint is something which can answer SPARQL queries.    `Endpoint`
+        is an abstract base class and cannot be instantiated on its own.
+        Current implementations include
         a :class:`RemoteEndpoint` via the SPARQL protocol or a :class:`LocalEndpoint` provided by rdflib.
 
         :param prefixes: Graph object with attached namespace mappings to be applied to the new :class:`Endpoint`
@@ -147,6 +176,23 @@ class Endpoint(metaclass=ABCMeta):
 
     def namespaces(self):
         """
+        Display prefix to namespace mapping.
+
+        Produces a Pandas `DataFrame` that looks something like this
+
+        ======  ==============================
+        prefix  namespace
+        ======  ==============================
+        bibo    ``http://purl.org/ontology/bibo/``
+        cc      ``http://creativecommons.org/ns#``
+        dbo     ``http://dbpedia.org/ontology/``
+        ...     ...
+        ======  ==============================
+
+        where `prefix` is the index of the dataframe so you can look up a namespace like
+
+        ``endpoint.namespaces().at['bibo','namespace']``
+
         :return: :class:`pandas.DataFrame` describing the prefix to namespace mapping used for this endpoint
         """
         prefix = [x[0] for x in self.prefixes.namespaces()]
@@ -155,11 +201,11 @@ class Endpoint(metaclass=ABCMeta):
         frame.columns.name = "prefix"
         return frame.sort_index()
 
-    def in_namespace(self, url):
+    def is_ok_qname(self, url):
         """
-        Many :class:`rdflib.URIRef` s can be resolve to a namespace and written as a short name (QName),  except when special
+        Many :class:`URIRef`\s can be resolved to a namespace and written as a short name (QName),  except when special
         characters such as parenthesis and colon are in the localpart of the domain.  In that case,  the :class:`URIRef`
-        should be rendered as <http://example.com/>.
+        should be rendered in RDF as an absolute URI (ex. ``<http://example.com/>``).
 
         :param url: a URIRef or a str for a URL
         :return: true if the URIRef can be safely resolved to a namespace in short form.
@@ -175,6 +221,16 @@ class Endpoint(metaclass=ABCMeta):
 
     def ns_part(self, url):
         """
+        Given a URI like
+
+        ``http://purl.org/ontology/bibo/AcademicArticle``
+
+        return the namespace part of the URI,  which would be
+
+        ``http://purl.org/ontology/bibo/``
+
+        This is based on the syntax of the URI,  not the declared prefixes associated
+        with this URI.
 
         :param url: URIRef or string URL
         :return: namespace part of URL as string
@@ -184,6 +240,16 @@ class Endpoint(metaclass=ABCMeta):
 
     def local_part(self, url):
         """
+        Given a URI like
+
+        ``http://purl.org/ontology/bibo/AcademicArticle``
+
+        return the localname part of the URI,  which would be
+
+        ``AcademicArticle``
+
+        This is based on the syntax of the URI,  not the declared prefixes associated
+        with this URI.
 
         :param url: URIRef or string URL
         :return: localname part of URL as string
@@ -193,7 +259,17 @@ class Endpoint(metaclass=ABCMeta):
 
     def to_python(self, term):
         """
-        This function has a camelCase as opposed to underscore_separate name to harmonize with the
+        Convert a simple rdflib `term` into a idiomatic Python object.
+
+        A simple rdflib term is entirely self-contained;  either a literal value or a signifier (a Resource) floating
+        in space,  without consideration of other facts in the graph.
+
+        For RDF literals and blank nodes,  behavior is exactly the same as the `toPython` method,  which this encloses.
+        URIReferences are wrapped in `GastrodonURI` objects which look like short names (QNames) inside Jupyter and Pandas,
+        but remember the full URI if they are later used with Gastrodon.
+
+        This is a method of an `Endpoint` as opposed to a static method or method of a `term` wrapper because the
+        exact resolution to a QName is relative to the namespaces defined for that `Endpoint`.
 
         :param term: an RDFLib Node object
         :return: a Plain Ordinary Python Object except for URI References which are returned as GastrodonURI
@@ -205,7 +281,7 @@ class Endpoint(metaclass=ABCMeta):
             if self.prefixes !=None and ("/" in term.toPython() or str(term).startswith('urn:')):
                 if self.base_uri and str(term).startswith(self.base_uri):
                     return GastrodonURI("<" + term[len(self.base_uri):] + ">", term)
-                if self.in_namespace(term):
+                if self.is_ok_qname(term):
                     try:
                         return GastrodonURI(self.short_name(term), term)
                     except Exception:
@@ -216,6 +292,20 @@ class Endpoint(metaclass=ABCMeta):
 
     def short_name(self,term):
         """
+        Assuming we've made the following namespace declaration on this endpoint,
+
+        ``@prefix bibo: <http://purl.org/ontology/bibo/>``
+
+        and given a URI like
+
+        ``http://purl.org/ontology/bibo/AcademicArticle``
+
+        this returns
+
+        ``bibo:AcademicArticle``
+
+        which can be used as a QName relative to the Endpoint.
+
         :param term: URIRef which can be expressed with a QName
         :return: the QName,  as a string
         """
@@ -685,7 +775,7 @@ class RemoteEndpoint(Endpoint):
 
 class LocalEndpoint(Endpoint):
     '''
-        LocalEndpoint for doing queries against a local RDFLib graph
+        LocalEndpoint for doing queries against a local RDFLib graph.
 
         :param graph: Graph object that will be encapsulated
         :param prefixes: Graph defining prefixes for this Endpoint,  will be the same as the input graph by default

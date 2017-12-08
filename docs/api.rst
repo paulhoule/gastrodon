@@ -1,5 +1,9 @@
-API Documentation
-******************
+API Reference
+*************
+
+This reference is organized to put the most important information first,  both overall and within each section.  You
+will mainly be working with implementations of the `Endpoint` object such as `LocalEndpoint` and `RemoteEndpoint`
+
 
 Endpoints
 =========
@@ -31,16 +35,18 @@ Endpoints
    These methods run quickly because they do not depend on the fronted RDF Graph; these are appropriate to use by callers such as `apply`
    methods and variants used in Pandas and similar software.
 
-   .. automethod:: toPython
+   .. automethod:: to_python
    .. automethod:: namespaces
    .. automethod:: ns_part
    .. automethod:: local_part
    .. automethod:: short_name
-   .. automethod:: in_namespace
+   .. automethod:: is_ok_qname
 
 
 Endpoint Implementations
 ========================
+
+If you wish to use an `Endpoint` you must instantiate one of the following implementations.
 
 .. autoclass:: LocalEndpoint
    :members:
@@ -64,9 +70,11 @@ Supporting Classes and Functions
 Objects Created Only By Gastrodon
 =================================
 
+You probably could (and should) get by without knowing about these two objects.  Both of these are created by
+Gastrodon to play particular roles in the IPython and Pandas environment.
+
 .. autoclass:: GastrodonURI
    :members:
-
 .. autoclass:: GastrodonException
    :members:
 
