@@ -8,8 +8,6 @@ other Python ecosystem tools.
 .. figure:: art/logo-hero.png
    :alt: Gastrodon Links SPARQL to Pandas
 
-   Gastrodon Links SPARQL to Pandas
-
 Gastrodon links databases that support the SPARQL protocol (`more than
 ten! <https://www.w3.org/wiki/LargeTripleStores>`__) to
 `http://pandas.pydata.org/ <Pandas>`__, a popular Python library for
@@ -26,13 +24,12 @@ copy subgraphs from one graph to another, making it possible to assemble
 local graphs that contain facts relevant to a particular decision, work
 on them intimately, and then store results in a permanent triple store.
 
+
 Seamless Data Translation
 =========================
 
 .. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/logo-hero.png
    :alt: Seamless Data Translation
-
-   Seamless Data Translation
 
 Gastrodon mediates between three data models: (1) RDF, (2) Pandas/NumPy,
 and (3) Native Python. Gastrodon lets you use Python variables in your
@@ -73,7 +70,6 @@ Jupyter native error messages
 .. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/awful-stack-trace.png
    :alt: Awful Stack Trace
 
-   Awful Stack Trace
 
 Improved Error Messages with Gastrodon
 --------------------------------------
@@ -81,14 +77,39 @@ Improved Error Messages with Gastrodon
 .. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/good-error-message.png
    :alt: Good Error Message
 
-   Good Error Message
+Getting Started
+===============
 
-The following are reference documentation for tools you will use
+Installation
+------------
+
+Gastrodon requires Python 3.6 and is registered in the `Python Package Index <https://pypi.org/project/gastrodon/#description>`_ and can
+be installed by typing::
+
+   pip install gastrodon
+   
+on the command line. **Note:**  Gastrodon downloads packages it requires via pip.  If you are running Anancoda
+(which works great with Gastrodon) you have a second package manager,  running parallel with pip,  which can install
+better versions of important software packages than the ones you can get from pip.  In Anaconda,  you should type the following
+to create an environment for gastrodon 
+
+   conda create -n gastrodonSandbox python=3.6 anaconda
+   conda activate gastrodonSandbox
+   conda install jupyter IPython pandas matplotlib bs4
+   pip install gastrodon
+
+Documentation
+-------------
+
+The major documentation resources for Gastrodon itself are:
+
+- `Example Notebooks <notebooks/> `_
+- `Gastrodon Reference Documentation <https://paulhoule.github.io/gastrodon/>`_
+
+The following are reference documentation for tools you will use:
 
 -  `Pandas <http://pandas.pydata.org/pandas-docs/stable/>`__
 -  `Jupyter <http://jupyter.org/index.html>`__
 -  `rdflib <https://github.com/RDFLib/rdflib#readme>`__
 -  `SPARQL <http://www.w3.org/TR/2013/REC-sparql11-query-20130321/#basicpatterns>`__
 
-Example notebooks can be found in the `notebooks <notebooks>`__
-directory.
