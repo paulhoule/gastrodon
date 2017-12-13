@@ -103,7 +103,7 @@ Documentation
 
 The major documentation resources for Gastrodon itself are:
 
-- `Example Notebooks <https://github.com/paulhoule/gastrodon/tree/master/notebooks> `_
+- `Example Notebooks <https://github.com/paulhoule/gastrodon/tree/master/notebooks>`_
 - `Gastrodon Reference Documentation <https://paulhoule.github.io/gastrodon/>`_
 
 The following are reference documentation for tools you will use:
