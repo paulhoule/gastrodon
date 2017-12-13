@@ -91,7 +91,7 @@ be installed by typing::
 on the command line. **Note:**  Gastrodon downloads packages it requires via pip.  If you are running Anancoda
 (which works great with Gastrodon) you have a second package manager,  running parallel with pip,  which can install
 better versions of important software packages than the ones you can get from pip.  In Anaconda,  you should type the following
-to create an environment for gastrodon 
+to create an environment for gastrodon:: 
 
    conda create -n gastrodonSandbox python=3.6 anaconda
    conda activate gastrodonSandbox
@@ -103,7 +103,7 @@ Documentation
 
 The major documentation resources for Gastrodon itself are:
 
-- `Example Notebooks <notebooks/> `_
+- `Example Notebooks <https://github.com/paulhoule/gastrodon/tree/master/notebooks> `_
 - `Gastrodon Reference Documentation <https://paulhoule.github.io/gastrodon/>`_
 
 The following are reference documentation for tools you will use:
