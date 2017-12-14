@@ -28,9 +28,6 @@ on them intimately, and then store results in a permanent triple store.
 Seamless Data Translation
 =========================
 
-.. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/logo-hero.png
-   :alt: Seamless Data Translation
-
 Gastrodon mediates between three data models: (1) RDF, (2) Pandas/NumPy,
 and (3) Native Python. Gastrodon lets you use Python variables in your
 SPARQL queries simply by adding ``?_`` to the name of your variables.
@@ -94,8 +91,8 @@ better versions of important software packages than the ones you can get from pi
 to create an environment for gastrodon:: 
 
    conda create -n gastrodonSandbox python=3.6 anaconda
-   conda activate gastrodonSandbox
-   conda install jupyter IPython pandas matplotlib bs4
+   activate gastrodonSandbox
+   conda install jupyter IPython pandas matplotlib
    pip install gastrodon
 
 Documentation
