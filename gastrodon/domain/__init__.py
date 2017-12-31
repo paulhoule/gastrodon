@@ -1,6 +1,5 @@
-from sphinxcontrib.domaintools import custom_domain
 import re
-
+from string import ascii_lowercase
 from docutils import nodes
 from sphinx import addnodes
 from sphinx.domains import Domain, ObjType
@@ -30,7 +29,7 @@ class Subject(ObjectDescription):
 
     def add_target_and_index(self, name, sig, signode):
         super().add_target_and_index(name, sig, signode)
-        targetname = '%s-%s' % (self.objtype, name)
+        targetname = squash_uri_to_label('%s-%s' % (self.objtype, name))
         signode['ids'].append(targetname)
         self.state.document.note_explicit_target(signode)
         self.env.domaindata[self.domain]['objects'][name] = \
@@ -68,6 +67,17 @@ class RDFDomain(Domain):
             return None
         return make_refnode(builder, fromdocname, docname,
                             labelid, contnode)
+
+def squash_uri_to_label(name):
+    output=[]
+    for c in name:
+        l=c.lower()
+        if l.isnumeric() or l in ascii_lowercase or l=="-" or l=="_":
+            output += [l]
+        else:
+            output += ["-"]
+    return "".join(output)
+
 
 def setup(app):
     print("Adding the RDFDomain")

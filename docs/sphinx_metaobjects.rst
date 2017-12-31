@@ -1,6 +1,10 @@
 Sphinx Metaobjects
 ==================
 
+How do we do it?
+
+:rdf:uri:`http://example.com/type`
+
 In the abstract,  Sphinx has an appealing capability of modelling multiple "domains"
 simultaneously.  This way we could write about a set of Python definitions (of modules,
 methods,  etc.) and also C definitions for associated code in the same project.
@@ -42,9 +46,14 @@ a particular RDF namespace.
 
 We like :class:`gastrodon.Endpoint` don't we?
 
-How do we do it?
-
-:rdf:uri:`http://example.com/type`
+3.2.5.1 The id attribute
+The id attribute specifies its element's unique identifier (ID).
+The value must be unique amongst all the IDs in the element's home subtree and must contain at least one character. The value must not contain any space characters.
+Note: There are no other restrictions on what form an ID can take; in particular, IDs can consist of just digits, start with a digit, start with an underscore, consist of just punctuation, etc.
+3.2.5.7 The class attribute
+The attribute, if specified, must have a value that is a set of space-separated tokens representing the various classes that the element belongs to.
+The classes that an HTML element has assigned to it consists of all the classes returned when the value of the class attribute is split on spaces. (Duplicates are ignored.)
+There are no additional restrictions on the tokens authors can use in the class attribute, but authors are encouraged to use values that describe the nature of the content, rather than values that describe the desired presentation of the content.
 
 How about another reference?
 
