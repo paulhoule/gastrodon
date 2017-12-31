@@ -49,6 +49,7 @@ Table of Contents
    :caption: Table of Contents:
 
    api
+   sphinx_metaobjects
 
 
 Indices and tables
