@@ -28,7 +28,6 @@ class Subject(ObjectDescription):
     domain = "rdf"
 
     def add_target_and_index(self, name, sig, signode):
-        super().add_target_and_index(name, sig, signode)
         targetname = squash_uri_to_label('%s-%s' % (self.objtype, name))
         signode['ids'].append(targetname)
         self.state.document.note_explicit_target(signode)
@@ -51,7 +50,7 @@ class RDFDomain(Domain):
     }
 
     directives = {
-        'uri':Subject
+        'subject':Subject
     }
 
     initial_data = {
