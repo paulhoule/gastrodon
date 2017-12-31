@@ -3,7 +3,7 @@ Sphinx Metaobjects
 
 How do we do it?
 
-:rdf:uri:`http://example.com/type`
+:rdf:uri:`http://www.w3.org/2000/01/rdf-schema#Class`
 
 In the abstract,  Sphinx has an appealing capability of modelling multiple "domains"
 simultaneously.  This way we could write about a set of Python definitions (of modules,
@@ -46,22 +46,21 @@ a particular RDF namespace.
 
 We like :class:`gastrodon.Endpoint` don't we?
 
-3.2.5.1 The id attribute
-------------------------
+Let's work out how subjects such be parsed.  In an :rst:directive:`rdf:subject` the possible inputs are either
 
-The id attribute specifies its element's unique identifier (ID).
-The value must be unique amongst all the IDs in the element's home subtree and must contain at least one character. The value must not contain any space characters.
-Note: There are no other restrictions on what form an ID can take; in particular, IDs can consist of just digits, start with a digit, start with an underscore, consist of just punctuation, etc.
+#. A full URI written as an RDF termlike '<http://www.w3.org/2000/01/rdf-schema#Class>'
+#. A full URI written as a string 'http://www.w3.org/2000/01/rdf-schema#'
+#. A qname,  ex, `rdfs:Class`
 
-3.2.5.7 The class attribute
----------------------------
+That's the input.  The output depends on what we are using it for.  Now the visible output should be a qname if possible
+(matching namespace declaration) or otherwise should be the full URI.  Internally,  however,  the name at which it
+is indexed on should be canonical.
 
-The attribute, if specified, must have a value that is a set of space-separated tokens representing the various classes that the element belongs to.
-The classes that an HTML element has assigned to it consists of all the classes returned when the value of the class attribute is split on spaces. (Duplicates are ignored.)
-There are no additional restrictions on the tokens authors can use in the class attribute, but authors are encouraged to use values that describe the nature of the content, rather than values that describe the desired presentation of the content.
+The same is true for URI references as roles.
 
-How about another reference?
+It may be better to support 'psuedo-qnames` that have characters that would not be allowed in a qname.  This would be
+helpful while referring to Dbpedia and similar subjects but might confuse people who use other tools.
 
-.. rdf:subject:: http://example.com/type
+.. rdf:subject:: rdfs:Class
 
 	i hope next year is better than last year, very much, thank you please...

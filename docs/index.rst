@@ -50,6 +50,7 @@ Table of Contents
 
    api
    sphinx_metaobjects
+   uri_resolution_examples
 
 
 Indices and tables
