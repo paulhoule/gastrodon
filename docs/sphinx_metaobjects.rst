@@ -44,23 +44,16 @@ meaningful characters would work,  but replicating RDF namespace mechanism would
 An alternative strategy could be to  introduce an `rdfs` or `owl` or `bibo` domain which represents
 a particular RDF namespace.
 
-We like :class:`gastrodon.Endpoint` don't we?
 
-Let's work out how subjects such be parsed.  In an :rst:directive:`rdf:subject` the possible inputs are either
-
-#. A full URI written as an RDF termlike '<http://www.w3.org/2000/01/rdf-schema#Class>'
-#. A full URI written as a string 'http://www.w3.org/2000/01/rdf-schema#'
-#. A qname,  ex, `rdfs:Class`
-
-That's the input.  The output depends on what we are using it for.  Now the visible output should be a qname if possible
-(matching namespace declaration) or otherwise should be the full URI.  Internally,  however,  the name at which it
-is indexed on should be canonical.
-
-The same is true for URI references as roles.
-
-It may be better to support 'psuedo-qnames` that have characters that would not be allowed in a qname.  This would be
-helpful while referring to Dbpedia and similar subjects but might confuse people who use other tools.
 
 .. rdf:subject:: rdfs:Class
 
-	i hope next year is better than last year, very much, thank you please...
+	This is what I have to say about this wooly and wonderful subject!
+
+	:rdfs isDefinedBy: :rdf:uri:`http://www.w3.org/2000/01/rdf-schema#`
+	:rdfs label: - Class
+	             - Klasse
+	:rdfs comment: The class of classes.
+	:rdfs subClassOf: :rdf:uri:`rdfs:Resource`
+
+

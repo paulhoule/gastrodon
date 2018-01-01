@@ -12,11 +12,12 @@ declarations and a base URI.
 .. doctest::
 
 	>>> x=UriResolver(
-	... 	{
-	...     	"rdfs":"http://www.w3.org/2000/01/rdf-schema#",
-	...         "dc":"http://purl.org/dc/elements/1.1/"
-	...		},
-	...		"http://dbpedia.org/resource/")
+	...     {
+	...	        "rdfs":"http://www.w3.org/2000/01/rdf-schema#",
+	...	        "dc":"http://purl.org/dc/elements/1.1/"
+	...	    },
+	...		"http://dbpedia.org/resource/"
+	...     )
 
 Writing URIs in Sphinx Markup
 -----------------------------
