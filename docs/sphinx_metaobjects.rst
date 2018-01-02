@@ -84,4 +84,11 @@ The Core vocabulary
 	Triples are represented using the `Field List`_ mechanism in reStructuredText.  Because colons are not
 	allowed in field names without escaping,  the prefix is separated from the localname with a space.
 
+	I see two different ways to move forward with this.  The existing :class:`sphinx.directives.ObjectDescription`
+	contains a fairly complex implementation which could possibly be used if we load a list of all predicates
+	into the TBox,  so that a set of field definitions can be generated.  The other possibility is to develop
+	something which is RDF Native.  I'll need to look over the code and sleep on it.  This may also be a good
+	time to bring the branch back to master,  because I think the current implementation is a keeper,  but
+	I might want to do development of property displays on a new branch to manage risk.
+
 .. _Field List: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#field-lists

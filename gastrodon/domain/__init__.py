@@ -26,6 +26,9 @@ class URIRefRole(XRefRole):
         return (title,target)
 
 class Subject(ObjectDescription):
+    def run(self):
+        return super().run()
+
     def handle_signature(self, sig, signode):
         resolver=self.env.domaindata[self.domain]["resolver"]
         sig=resolver.any_to_uri(sig)
