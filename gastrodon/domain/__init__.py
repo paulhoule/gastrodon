@@ -16,10 +16,6 @@ from sphinx.util.nodes import make_refnode
 #import pydevd
 #pydevd.settrace('localhost', port=10212, stdoutToServer=True, stderrToServer=True)
 
-#
-# TODO: URI reference appears in box like other references
-#
-
 class URIRefRole(XRefRole):
     domain="rdf"
     def process_link(self, env, refnode, has_explicit_title, title, target):

@@ -24,36 +24,64 @@ Some Use Cases
 Thoughts on Architecture
 ------------------------
 
-The architecture of domains in Sphinx is a bit weaker than I wish it was.  My basic complaint is
-that the Python domain is one set of directives tangled up in the Python domain API.  Then there
-is a set of :rst:dir:`autodoc` and :rst:dir:`autosummary` related directives that implement automatic operations on
-the python domain that sit separately in different extensions.
+There is not a lot of shared code between Sphinx domains;  each domain has its own unique way of doing
+things (can be customized),  but the implementation of a new domain is tedious.  If you want automatic
+extraction of markup (eg. the :module:`sphinx.ext.autodoc`) extension that has to be done fresh for
+each language you support.  If you want to render summaries (eg. the :module:`sphinx.ext.autosummary`)
+that is also domain dependent.
 
-There is
+The following package
 
 https://bitbucket.org/klorenz/sphinxcontrib-domaintools
 
-which is makes it possible to define domains with a declarative syntax,  this is a huge
-improvement,  but that doesn't come with an "autodoc" replacement or an obvious way to bolt one
-on.
+helps you create domains with model-based definitions,  but it doesn't do anything in the extraction
+or summary departments.  Rather than building on that,  I decided to build a minimalist framework
+for RDF and layer features on top of it.  `sphinxcontrib-domaintools` does point out how dynamic we
+can get.  Based on data we have at initialization time (all or part of the RDF graph),  we can
+create new roles and directives.  We could also create multiple instances of the RDF domain with
+different graphs and configurations.
 
-To be truely universal it is tempting to introduce an  `rdf` or `uri` domain which points to a
-named RDF resource (no blank nodes?)  I don't know how parsing of colons and other
-meaningful characters would work,  but replicating RDF namespace mechanism would be great.
+The Core vocabulary
+-------------------
 
-An alternative strategy could be to  introduce an `rdfs` or `owl` or `bibo` domain which represents
-a particular RDF namespace.
+.. rst:role:: rdf:uri
+
+	The uri role.  Use this role to refer to a named URI resource.  The following formats are supported::
+
+		:rdf:uri:`rdfs:Class`
+		:rdf:uri:`http://www.w3.org/2000/01/rdf-schema#Class`
+		:rdf:uri:`<http://www.w3.org/2000/01/rdf-schema#Class>`
+
+	see :doc:`uri_resolution_examples` for details.  If a namespace is declared,  uris in that namespace
+	will be displayed in shortened form (eg. :rdf:uri:`rdfs:Class`) but will otherwise be displayed in long form
+	(eg. :rdf:uri:`http://example.com/`)
+
+.. rst:directive:: rdf:subject
+
+	The `rdf:subject` directive contains a description of a named URI resource.  You can think of this
+	as a description of the URI,  or as a description of the thing the URI refers to.  Here is an example::
+
+		.. rdf:subject:: rdfs:Class
 
 
 
-.. rdf:subject:: rdfs:Class
+			:rdfs isDefinedBy: :rdf:uri:`http://www.w3.org/2000/01/rdf-schema#`
+			:rdfs label: Class
+			:rdfs comment: The class of classes.
+			:rdfs subClassOf: :rdf:uri:`rdfs:Resource`
 
-	This is what I have to say about this wooly and wonderful subject!
+	which renders like
 
-	:rdfs isDefinedBy: :rdf:uri:`http://www.w3.org/2000/01/rdf-schema#`
-	:rdfs label: - Class
-	             - Klasse
-	:rdfs comment: The class of classes.
-	:rdfs subClassOf: :rdf:uri:`rdfs:Resource`
+	.. rdf:subject:: rdfs:Class
 
+		This is what I have to say about this wooly and wonderful subject!
 
+		:rdfs isDefinedBy: :rdf:uri:`http://www.w3.org/2000/01/rdf-schema#`
+		:rdfs label: - Class
+		:rdfs comment: The class of classes.
+		:rdfs subClassOf: :rdf:uri:`rdfs:Resource`
+
+	Triples are represented using the `Field List`_ mechanism in reStructuredText.  Because colons are not
+	allowed in field names without escaping,  the prefix is separated from the localname with a space.
+
+.. _Field List: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#field-lists
