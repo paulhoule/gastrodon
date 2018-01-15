@@ -5,6 +5,12 @@
 # sphinx-quickstart on Wed Dec  6 12:38:20 2017.
 #
 
+import os
+
+if "SPHINX_DEBUG_PORT" in os.environ:
+    import pydevd
+    pydevd.settrace('localhost', port=int(os.environ["SPHINX_DEBUG_PORT"]), stdoutToServer=True, stderrToServer=True)
+
 from pkg_resources import get_distribution
 from rdflib import Graph,URIRef
 

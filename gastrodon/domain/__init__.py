@@ -15,9 +15,6 @@ from sphinx.roles import XRefRole
 from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.nodes import make_refnode
 
-import pydevd
-pydevd.settrace('localhost', port=10212, stdoutToServer=True, stderrToServer=True)
-
 class URIRefRole(XRefRole):
     domain="rdf"
     def process_link(self, env, refnode, has_explicit_title, title, target):
@@ -27,78 +24,7 @@ class URIRefRole(XRefRole):
             title=resolver.humanize_uri(target)
         return (title,target)
 
-class FlexibleObjectDescription(Directive):
-    """
-        This class is based on the :class:`sphinx.directive.ObjectDescription`,
-        but has been reorganized to make it easier to modify behavior,  particularly
-        to replace :class:`sphinx.util.DocFieldTransformer` some other transformation
-        on the content.
-    """
-
-    has_content = True
-    required_arguments = 1
-    optional_arguments = 0
-    final_argument_whitespace = True
-    option_spec = {
-        'noindex': directives.flag,
-    }
-
-    # types of doc fields that this directive handles, see sphinx.util.docfields
-    doc_field_types = []    # type: List[Any]
-    domain = None           # type: unicode
-    objtype = None          # type: unicode
-    indexnode = None        # type: addnodes.index
-
-    def get_signatures(self):
-        # type: () -> List[unicode]
-        """
-        Retrieve the signatures to document from the directive arguments.  By
-        default, signatures are given as arguments, one per line.
-
-        Backslash-escaping of newlines is supported.
-        """
-        lines = nl_escape_re.sub('', self.arguments[0]).split('\n')
-        # remove backslashes to support (dummy) escapes; helps Vim highlighting
-        return [strip_backslash_re.sub(r'\1', line.strip()) for line in lines]
-
-    def handle_signature(self, sig, signode):
-        # type: (unicode, addnodes.desc_signature) -> Any
-        """
-        Parse the signature *sig* into individual nodes and append them to
-        *signode*. If ValueError is raised, parsing is aborted and the whole
-        *sig* is put into a single desc_name node.
-
-        The return value should be a value that identifies the object.  It is
-        passed to :meth:`add_target_and_index()` unchanged, and otherwise only
-        used to skip duplicates.
-        """
-        raise ValueError
-
-    def add_target_and_index(self, name, sig, signode):
-        # type: (Any, unicode, addnodes.desc_signature) -> None
-        """
-        Add cross-reference IDs and entries to self.indexnode, if applicable.
-
-        *name* is whatever :meth:`handle_signature()` returned.
-        """
-        return  # do nothing by default
-
-    def before_content(self):
-        # type: () -> None
-        """
-        Called before parsing content. Used to set information about the current
-        directive context on the build environment.
-        """
-        pass
-
-    def after_content(self):
-        # type: () -> None
-        """
-        Called after parsing content. Used to reset information about the
-        current directive context on the build environment.
-        """
-        pass
-
+class FlexibleObjectDescription(ObjectDescription):
     def run(self):
         # type: () -> List[nodes.Node]
         """
