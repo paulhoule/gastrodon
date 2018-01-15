@@ -63,8 +63,6 @@ The Core vocabulary
 
 		.. rdf:subject:: rdfs:Class
 
-
-
 			:rdfs isDefinedBy: :rdf:uri:`http://www.w3.org/2000/01/rdf-schema#`
 			:rdfs label: Class
 			:rdfs comment: The class of classes.
@@ -90,5 +88,8 @@ The Core vocabulary
 	something which is RDF Native.  I'll need to look over the code and sleep on it.  This may also be a good
 	time to bring the branch back to master,  because I think the current implementation is a keeper,  but
 	I might want to do development of property displays on a new branch to manage risk.
+
+:Parameters: value A
+:Returns: value B
 
 .. _Field List: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#field-lists

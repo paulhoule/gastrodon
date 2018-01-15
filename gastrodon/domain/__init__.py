@@ -2,6 +2,7 @@ import re
 from string import ascii_lowercase
 from urllib.parse import urljoin
 
+from docutils.parsers.rst import Directive, directives
 from rdflib import Graph
 
 from docutils import nodes
@@ -9,12 +10,13 @@ from sphinx import addnodes
 from sphinx.domains import Domain, ObjType
 from sphinx.domains.std import GenericObject
 from sphinx.locale import l_, _
-from sphinx.directives import ObjectDescription
+from sphinx.directives import ObjectDescription, nl_escape_re, strip_backslash_re
 from sphinx.roles import XRefRole
+from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.nodes import make_refnode
 
-#import pydevd
-#pydevd.settrace('localhost', port=10212, stdoutToServer=True, stderrToServer=True)
+import pydevd
+pydevd.settrace('localhost', port=10212, stdoutToServer=True, stderrToServer=True)
 
 class URIRefRole(XRefRole):
     domain="rdf"
@@ -25,9 +27,188 @@ class URIRefRole(XRefRole):
             title=resolver.humanize_uri(target)
         return (title,target)
 
-class Subject(ObjectDescription):
+class FlexibleObjectDescription(Directive):
+    """
+        This class is based on the :class:`sphinx.directive.ObjectDescription`,
+        but has been reorganized to make it easier to modify behavior,  particularly
+        to replace :class:`sphinx.util.DocFieldTransformer` some other transformation
+        on the content.
+    """
+
+    has_content = True
+    required_arguments = 1
+    optional_arguments = 0
+    final_argument_whitespace = True
+    option_spec = {
+        'noindex': directives.flag,
+    }
+
+    # types of doc fields that this directive handles, see sphinx.util.docfields
+    doc_field_types = []    # type: List[Any]
+    domain = None           # type: unicode
+    objtype = None          # type: unicode
+    indexnode = None        # type: addnodes.index
+
+    def get_signatures(self):
+        # type: () -> List[unicode]
+        """
+        Retrieve the signatures to document from the directive arguments.  By
+        default, signatures are given as arguments, one per line.
+
+        Backslash-escaping of newlines is supported.
+        """
+        lines = nl_escape_re.sub('', self.arguments[0]).split('\n')
+        # remove backslashes to support (dummy) escapes; helps Vim highlighting
+        return [strip_backslash_re.sub(r'\1', line.strip()) for line in lines]
+
+    def handle_signature(self, sig, signode):
+        # type: (unicode, addnodes.desc_signature) -> Any
+        """
+        Parse the signature *sig* into individual nodes and append them to
+        *signode*. If ValueError is raised, parsing is aborted and the whole
+        *sig* is put into a single desc_name node.
+
+        The return value should be a value that identifies the object.  It is
+        passed to :meth:`add_target_and_index()` unchanged, and otherwise only
+        used to skip duplicates.
+        """
+        raise ValueError
+
+    def add_target_and_index(self, name, sig, signode):
+        # type: (Any, unicode, addnodes.desc_signature) -> None
+        """
+        Add cross-reference IDs and entries to self.indexnode, if applicable.
+
+        *name* is whatever :meth:`handle_signature()` returned.
+        """
+        return  # do nothing by default
+
+    def before_content(self):
+        # type: () -> None
+        """
+        Called before parsing content. Used to set information about the current
+        directive context on the build environment.
+        """
+        pass
+
+    def after_content(self):
+        # type: () -> None
+        """
+        Called after parsing content. Used to reset information about the
+        current directive context on the build environment.
+        """
+        pass
+
     def run(self):
-        return super().run()
+        # type: () -> List[nodes.Node]
+        """
+        Main directive entry function, called by docutils upon encountering the
+        directive.
+
+        This directive is meant to be quite easily subclassable, so it delegates
+        to several additional methods.  What it does:
+
+        * find out if called as a domain-specific directive, set self.domain
+        * create a `desc` node to fit all description inside
+        * parse standard options, currently `noindex`
+        * create an index node if needed as self.indexnode
+        * parse all given signatures (as returned by self.get_signatures())
+          using self.handle_signature(), which should either return a name
+          or raise ValueError
+        * add index entries using self.add_target_and_index()
+        * parse the content and handle doc fields in it
+        """
+        node = self.configure_node()
+        self.process_signature(node)
+        self.process_content(node)
+        return [self.indexnode, node]
+
+    def configure_node(self):
+        if ':' in self.name:
+            self.domain, self.objtype = self.name.split(':', 1)
+        else:
+            self.domain, self.objtype = '', self.name
+        self.env = self.state.document.settings.env  # type: BuildEnvironment
+        self.indexnode = addnodes.index(entries=[])
+        node = addnodes.desc()
+        node.document = self.state.document
+        node['domain'] = self.domain
+        # 'desctype' is a backwards compatible attribute
+        node['objtype'] = node['desctype'] = self.objtype
+        node['noindex'] = ('noindex' in self.options)
+        return node
+
+    def process_content(self, node):
+        contentnode = addnodes.desc_content()
+        node.append(contentnode)
+        if self.names:
+            # needed for association of version{added,changed} directives
+            self.env.temp_data['object'] = self.names[0]
+        self.before_content()
+        self.state.nested_parse(self.content, self.content_offset, contentnode)
+        self.transform_content(contentnode)
+        self.env.temp_data['object'] = None
+        self.after_content()
+
+    def transform_content(self, contentnode):
+        DocFieldTransformer(self).transform_all(contentnode)
+
+    def process_signature(self, node):
+        self.names = []  # type: List[unicode]
+        signatures = self.get_signatures()
+        for i, sig in enumerate(signatures):
+            # add a signature node for each signature in the current unit
+            # and add a reference target for it
+            signode = addnodes.desc_signature(sig, '')
+            signode['first'] = False
+            node.append(signode)
+            try:
+                # name can also be a tuple, e.g. (classname, objname);
+                # this is strictly domain-specific (i.e. no assumptions may
+                # be made in this base class)
+                name = self.handle_signature(sig, signode)
+            except ValueError:
+                # signature parsing failed
+                signode.clear()
+                signode += addnodes.desc_name(sig, sig)
+                continue  # we don't want an index entry here
+            if name not in self.names:
+                self.names.append(name)
+                if not node["noindex"]:
+                    # only add target and index entry if this is the first
+                    # description of the object with this name in this desc block
+                    self.add_target_and_index(name, sig, signode)
+
+class RDFFieldTransformer:
+    def __init__(self,owner):
+
+
+        self.env=owner.env
+        self.domain=owner.domain
+
+    def transform_all(self, node):
+        # type: (nodes.Node) -> None
+        """Transform all field list children of a node."""
+        # don't traverse, only handle field lists that are immediate children
+        for child in node:
+            if isinstance(child, nodes.field_list):
+                self.transform(child)
+
+    def transform(self,node):
+        return node
+
+
+class Subject(FlexibleObjectDescription):
+    def get_signatures(self):
+        # type: () -> List[unicode]
+        """
+        Retrieve the signatures to document from the directive arguments.  By
+        default, signatures are given as arguments, one per line.
+
+        Backslash-escaping of newlines is supported.
+        """
+        lines = nl_escape_re.sub('', self.arguments[0]).split('\n')
+        return [strip_backslash_re.sub(r'\1', line.strip()) for line in lines]
 
     def handle_signature(self, sig, signode):
         resolver=self.env.domaindata[self.domain]["resolver"]
@@ -35,10 +216,7 @@ class Subject(ObjectDescription):
         signode += addnodes.desc_name(sig, resolver.humanize_uri(sig))
         return sig
 
-    domain = "rdf"
-
     def add_target_and_index(self, name, sig, signode):
-
         tbox=self.env.config.rdf_tbox
         nsmgr=tbox.namespace_manager
         targetname = squash_uri_to_label('%s-%s' % (self.objtype, name))
@@ -46,6 +224,9 @@ class Subject(ObjectDescription):
         self.state.document.note_explicit_target(signode)
         self.env.domaindata[self.domain]['objects'][name] = \
             self.env.docname, targetname
+
+    def transform_content(self, contentnode):
+        RDFFieldTransformer(self).transform_all(contentnode)
 
     indextemplate = l_('RDF Subject; %s')
 
