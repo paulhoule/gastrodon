@@ -14,6 +14,7 @@ from sphinx.directives import ObjectDescription, nl_escape_re, strip_backslash_r
 from sphinx.roles import XRefRole
 from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.nodes import make_refnode
+from docutils.nodes import Text
 
 class URIRefRole(XRefRole):
     domain="rdf"
@@ -121,6 +122,12 @@ class RDFFieldTransformer:
                 self.transform(child)
 
     def transform(self,node):
+        for field in node.children:
+            field_name=field.children[0]
+            str_name=str(field_name.children[0]).replace(" ",":")
+            field_name.clear()
+            field_name+=Text(str_name)
+            print("[passed it]")
         return node
 
 
