@@ -2,10 +2,13 @@ import re
 from string import ascii_lowercase
 from urllib.parse import urljoin
 
+from docutils.frontend import Values, OptionParser
 from docutils.parsers.rst import Directive, directives
+from docutils.parsers.rst.states import Inliner
+from docutils.utils import new_reporter, new_document
 from rdflib import Graph
 
-from docutils import nodes
+from docutils import nodes, frontend
 from sphinx import addnodes
 from sphinx.domains import Domain, ObjType
 from sphinx.domains.std import GenericObject
@@ -14,10 +17,12 @@ from sphinx.directives import ObjectDescription, nl_escape_re, strip_backslash_r
 from sphinx.roles import XRefRole
 from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.nodes import make_refnode
-from docutils.nodes import Text
+from docutils.nodes import Text, document
+
 
 class URIRefRole(XRefRole):
     domain="rdf"
+
     def process_link(self, env, refnode, has_explicit_title, title, target):
         resolver=env.domaindata[self.domain]["resolver"]
         target=resolver.any_to_uri(target)
@@ -108,8 +113,6 @@ class FlexibleObjectDescription(ObjectDescription):
 
 class RDFFieldTransformer:
     def __init__(self,owner):
-
-
         self.env=owner.env
         self.domain=owner.domain
 
@@ -124,11 +127,34 @@ class RDFFieldTransformer:
     def transform(self,node):
         for field in node.children:
             field_name=field.children[0]
-            str_name=str(field_name.children[0]).replace(" ",":")
-            field_name.clear()
+
+            str_name=str(field_name.children[0])
+            if " " in str_name:
+                parts=str_name.split(" ")
+                if len(parts)==2:
+                    field_name.clear()
+                    for subnode in self.create_role(str_name,str_name.replace(" ",":")):
+                        field_name += subnode
+                    continue
+
+
             field_name+=Text(str_name)
-            print("[passed it]")
+
         return node
+
+    def create_role(self,rawtext,text):
+        uriRole=self.env.domains["rdf"].roles["uri"]
+        fake_inliner=Inliner()
+        settings=frontend.OptionParser().get_default_values()
+        settings._update_loose({"env":self.env})
+        fake_inliner.document=new_document("Field Name: "+rawtext,settings)
+        fake_inliner.reporter=fake_inliner.document.reporter
+        def get_source_and_line(lineno=None):
+            # type: (int) -> Tuple[unicode, int]
+            return "Field Name: "+rawtext, None
+
+        fake_inliner.reporter.get_source_and_line = get_source_and_line
+        return uriRole("rdf:uri",rawtext,text,None,fake_inliner)
 
 
 class Subject(FlexibleObjectDescription):
