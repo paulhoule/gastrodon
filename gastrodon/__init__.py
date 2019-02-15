@@ -10,7 +10,13 @@ from functools import lru_cache
 from sys import stdout,_getframe
 from types import FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType
 from types import BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType
-from typing import Dict,GenericMeta,Match
+from typing import Dict,Match
+try:
+    from typing import GenericMeta  # python 3.6
+except ImportError:
+    # in 3.7, genericmeta doesn't exist but we don't need it
+    # see pep-0560/
+    class GenericMeta(type): pass
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
