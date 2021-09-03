@@ -8,7 +8,9 @@ from docutils import nodes
 from sphinx import addnodes
 from sphinx.domains import Domain, ObjType
 from sphinx.domains.std import GenericObject
-from sphinx.locale import l_, _
+# l_() was integrated into _()
+# https://github.com/sphinx-doc/sphinx/commit/8d653a406dc0dc6c2632176ab4757ca15474b10f
+from sphinx.locale import _
 from sphinx.directives import ObjectDescription
 from sphinx.roles import XRefRole
 from sphinx.util.nodes import make_refnode
@@ -47,7 +49,7 @@ class Subject(ObjectDescription):
         self.env.domaindata[self.domain]['objects'][name] = \
             self.env.docname, targetname
 
-    indextemplate = l_('RDF Subject; %s')
+    indextemplate = _('RDF Subject; %s')
 
 
 class RDFDomain(Domain):
