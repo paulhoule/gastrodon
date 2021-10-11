@@ -10,7 +10,7 @@ from functools import lru_cache
 from sys import stdout,_getframe
 from types import FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType
 from types import BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType
-from typing import Dict,GenericMeta,Match
+from typing import Dict,Match
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
@@ -34,7 +34,7 @@ from rdflib.term import Identifier, _castPythonToLiteral, Variable
 _cannot_substitute={
     FunctionType,LambdaType,GeneratorType,CoroutineType,FrameType,CodeType,MethodType,
     BuiltinFunctionType,BuiltinMethodType,DynamicClassAttribute,ModuleType,AsyncGeneratorType,
-    ABCMeta,GenericMeta,type
+    ABCMeta,type
 }
 
 _pncb_regex='_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF'

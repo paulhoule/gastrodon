@@ -18,6 +18,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='gastrodon',
     setup_requires=['setuptools_scm'],
+    python_requires = '>=3.7',
     use_scm_version=True,
     description='Toolkit to display,  analyze,  and visualize data and documents based on RDF graphs and the SPARQL query language using Pandas,  Jupyter, and other Python ecosystem tools.',
     long_description=long_description,
