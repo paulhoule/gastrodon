@@ -1,15 +1,10 @@
-import re
 from string import ascii_lowercase
 from urllib.parse import urljoin
 
 from rdflib import Graph
 
-from docutils import nodes
 from sphinx import addnodes
 from sphinx.domains import Domain, ObjType
-from sphinx.domains.std import GenericObject
-# l_() was integrated into _()
-# https://github.com/sphinx-doc/sphinx/commit/8d653a406dc0dc6c2632176ab4757ca15474b10f
 from sphinx.locale import _
 from sphinx.directives import ObjectDescription
 from sphinx.roles import XRefRole

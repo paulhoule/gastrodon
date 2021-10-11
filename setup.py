@@ -50,5 +50,16 @@ setup(
     # What does your project relate to?
     keywords='sparql rdf rdflib pandas visualization',
     packages=find_packages(exclude=['art','notebooks']),
-    install_requires=['rdflib','pyparsing','IPython','SPARQLWrapper','uritools','pandas','ipython-autotime','matplotlib','bs4'],
+    install_requires=[
+        'rdflib',
+        'pyparsing',
+        'IPython',
+        'SPARQLWrapper',
+        'uritools',
+        'pandas',
+        'ipython-autotime',
+        'matplotlib',
+        'bs4',
+        'sphinx'
+    ],
 )
