@@ -80,7 +80,7 @@ Getting Started
 Installation
 ------------
 
-Gastrodon requires Python 3.6 and is registered in the `Python Package Index <https://pypi.org/project/gastrodon/#description>`_ and can
+Gastrodon requires Python 3.7 and is registered in the `Python Package Index <https://pypi.org/project/gastrodon/#description>`_ and can
 be installed by typing::
 
    pip install gastrodon
@@ -90,7 +90,7 @@ on the command line. **Note:**  Gastrodon downloads packages it requires via pip
 better versions of important software packages than the ones you can get from pip.  In Anaconda,  you should type the following
 to create an environment for gastrodon:: 
 
-   conda create -n gastrodonSandbox python=3.6 anaconda
+   conda create -n gastrodonSandbox python=3.7 anaconda
    activate gastrodonSandbox
    conda install jupyter IPython pandas matplotlib
    pip install gastrodon

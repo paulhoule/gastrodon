@@ -17,9 +17,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='gastrodon',
-    setup_requires=['setuptools_scm'],
     python_requires = '>=3.7',
-    use_scm_version=True,
     description='Toolkit to display,  analyze,  and visualize data and documents based on RDF graphs and the SPARQL query language using Pandas,  Jupyter, and other Python ecosystem tools.',
     long_description=long_description,
     url='https://github.com/paulhoule/gastrodon',
@@ -29,7 +27,7 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -45,7 +43,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Text Processing :: Markup :: HTML',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 
     # What does your project relate to?
@@ -61,6 +59,8 @@ setup(
         'ipython-autotime',
         'matplotlib',
         'bs4',
-        'sphinx'
+        'sphinx',
+        'html5lib'
     ],
+    version='1.0.0'
 )

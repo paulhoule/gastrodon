@@ -27,6 +27,8 @@ from rdflib.plugins.sparql.parser import parseQuery,parseUpdate
 from rdflib.store import Store
 from rdflib.term import Identifier, _castPythonToLiteral, Variable
 
+__version__ = '1.0.0'
+
 #
 # types that could not reasonably be expected to be serialized automatically to RDF terms in a SPARQL query.
 #
@@ -803,7 +805,7 @@ class LocalEndpoint(Endpoint):
         return
 
 def _toRDF(x):
-    lex,datatype=_castPythonToLiteral(x)
+    lex,datatype=_castPythonToLiteral(x, None)
     return Literal(lex,datatype=datatype)
 
 def ttl(g:Store):
