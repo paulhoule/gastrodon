@@ -14,12 +14,16 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
+    
+lines = long_description.split('\n')
+lines = [l for l in lines if not ':alt' in l]
+lines = [l for l in lines if not '.. figure::' in l]
 
 setup(
     name='gastrodon',
     python_requires = '>=3.7',
     description='Toolkit to display,  analyze,  and visualize data and documents based on RDF graphs and the SPARQL query language using Pandas,  Jupyter, and other Python ecosystem tools.',
-    long_description=long_description,
+    long_description="\n".join(lines),
     url='https://github.com/paulhoule/gastrodon',
     author='Paul Houle',
     author_email='paul.houle@ontology2.com',

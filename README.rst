@@ -6,7 +6,7 @@ RDF graphs and the SPARQL query language using Pandas, Jupyter, and
 other Python ecosystem tools.
 
 .. figure:: art/logo-hero.png
-   Gastrodon Links SPARQL to Pandas
+   :alt: Gastrodon Links SPARQL to Pandas
 
 Gastrodon links databases that support the SPARQL protocol (`more than ten! <https://www.w3.org/wiki/LargeTripleStores>`__) to
 `http://pandas.pydata.org/ <Pandas>`__, a popular Python library for
@@ -17,7 +17,8 @@ ideal environment for telling stories that reveal the value of data,
 ontologies, taxonomies, and models.
 
 In addition to remote databases, Gastrodon can do SPARQL queries over
-in-memory RDF graphs (from `rdflib <https://github.com/RDFLib/rdflib>`__). It has facilities to
+in-memory RDF graphs (from
+`rdflib <https://github.com/RDFLib/rdflib>`__). It has facilities to
 copy subgraphs from one graph to another, making it possible to assemble
 local graphs that contain facts relevant to a particular decision, work
 on them intimately, and then store results in a permanent triple store.
@@ -38,7 +39,7 @@ Query Intelligence
 ==================
 
 .. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/query-intelligence.png
-   Query Intelligence
+   :alt: Query Intelligence
 
    Query Intelligence
 
@@ -63,14 +64,14 @@ Jupyter native error messages
 -----------------------------
 
 .. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/awful-stack-trace.png
-   Awful Stack Trace
+   :alt: Awful Stack Trace
 
 
 Improved Error Messages with Gastrodon
 --------------------------------------
 
 .. figure:: https://github.com/paulhoule/gastrodon/blob/master/art/good-error-message.png
-   Good Error Message
+   :alt: Good Error Message
 
 Getting Started
 ===============
@@ -88,7 +89,7 @@ on the command line. **Note:**  Gastrodon downloads packages it requires via pip
 better versions of important software packages than the ones you can get from pip.  In Anaconda,  you should type the following
 to create an environment for gastrodon::
 
-   conda create -n gastrodonSandbox python=3.7 anaconda
+   conda create -n gastrodonSandbox python=3.6 anaconda
    activate gastrodonSandbox
    conda install jupyter IPython pandas matplotlib
    pip install gastrodon
@@ -107,5 +108,4 @@ The following are reference documentation for tools you will use:
 -  `Jupyter <http://jupyter.org/index.html>`__
 -  `rdflib <https://github.com/RDFLib/rdflib#readme>`__
 -  `SPARQL <http://www.w3.org/TR/2013/REC-sparql11-query-20130321/#basicpatterns>`__
-
 
